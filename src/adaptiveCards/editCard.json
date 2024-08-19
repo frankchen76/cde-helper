@@ -1,0 +1,201 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.6",
+    "refresh": {
+        "action": {
+            "type": "Action.Execute",
+            "verb": "refresh",
+            "title": "Refresh",
+            "data": {
+                "taskId": "${id}"
+            }
+        }
+    },
+    "body": [
+        {
+            "type": "Container",
+            "separator": true,
+            "items": [
+                {
+                    "type": "ColumnSet",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "size": "Large",
+                                    "weight": "Bolder",
+                                    "text": "📦 [${title}](${url})",
+                                    "wrap": true,
+                                    "style": "heading"
+                                }
+                            ],
+                            "width": 80
+                        },
+                        {
+                            "type": "Column",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "${if(state=='To Do', '❌', if(state=='Doing','🚧','✅'))}",
+                                    "wrap": true,
+                                    "horizontalAlignment": "Right",
+                                    "isSubtle": true
+                                }
+                            ],
+                            "width": 20
+                        }
+                    ]
+                }
+            ],
+            "bleed": true
+        },
+        {
+            "type": "Container",
+            "style": "emphasis",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "weight": "Bolder",
+                    "text": "**🗒️ Task information**",
+                    "wrap": true,
+                    "size": "Medium",
+                    "isSubtle": false
+                },
+                {
+                    "type": "ColumnSet",
+                    "separator": true,
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "FactSet",
+                                    "spacing": "Large",
+                                    "facts": [
+                                        {
+                                            "title": "Id",
+                                            "value": "[${id}](${url})"
+                                        },
+                                        {
+                                            "title": "Area",
+                                            "value": "${area}"
+                                        },
+                                        {
+                                            "title": "Completed Work",
+                                            "value": "${string(completedWork)}"
+                                        }
+                                    ],
+                                    "separator": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "FactSet",
+                                    "spacing": "Large",
+                                    "facts": [
+                                        {
+                                            "title": "Creation Date",
+                                            "value": "${createdDate}"
+                                        },
+                                        {
+                                            "title": "Due Date",
+                                            "value": "${dueDate}"
+                                        },
+                                        {
+                                            "title": "Tags",
+                                            "value": "${tags}"
+                                        }
+                                    ],
+                                    "separator": true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Container",
+            "style": "emphasis",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "weight": "Bolder",
+                    "text": "**Description**",
+                    "wrap": true,
+                    "size": "Medium",
+                    "isSubtle": false
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "${description}",
+                    "wrap": true,
+                    "size": "Small",
+                    "maxLines": 6
+                }
+            ]
+        },
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "ActionSet",
+                    "actions": [
+                        {
+                            "type": "Action.ShowCard",
+                            "title": "Take action",
+                            "card": {
+                                "type": "AdaptiveCard",
+                                "body": [
+                                    {
+                                        "type": "Input.Text",
+                                        "id": "txtStock",
+                                        "label": "Quantity",
+                                        "min": 0,
+                                        "max": 9999,
+                                        "errorMessage": "Invalid input, use whole positive number",
+                                        "style": "Tel"
+                                    }
+                                ],
+                                "actions": [
+                                    {
+                                        "type": "Action.Execute",
+                                        "title": "Update stock ✅",
+                                        "verb": "ok",
+                                        "data": {
+                                            "productId": "${id}"
+                                        }
+                                    },
+                                    {
+                                        "type": "Action.Execute",
+                                        "title": "Restock 📦",
+                                        "verb": "restock",
+                                        "data": {
+                                            "productId": "${id}"
+                                        }
+                                    },
+                                    {
+                                        "type": "Action.Execute",
+                                        "title": "Cancel restock ❌",
+                                        "verb": "cancel",
+                                        "data": {
+                                            "productId": "${id}"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

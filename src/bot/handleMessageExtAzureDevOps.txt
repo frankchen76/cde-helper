@@ -1,0 +1,202 @@
+import { TeamsActivityHandler, CardFactory, TurnContext, ActivityTypes, SigninStateVerificationQuery, MessagingExtensionQuery, MessagingExtensionResponse } from "botbuilder";
+import {
+    MessageExtensionTokenResponse,
+    handleMessageExtensionQueryWithSSO,
+    OnBehalfOfCredentialAuthConfig,
+    OnBehalfOfUserCredential,
+} from "@microsoft/teamsfx";
+import { Client } from "@microsoft/microsoft-graph-client";
+import { TokenCredentialAuthenticationProvider } from "@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials";
+import "isomorphic-fetch";
+
+const oboAuthConfig: OnBehalfOfCredentialAuthConfig = {
+    authorityHost: "https://app.vssps.visualstudio.com", //process.env.M365_AUTHORITY_HOST,
+    clientId: process.env.M365_CLIENT_ID,
+    tenantId: process.env.M365_TENANT_ID,
+    clientSecret: process.env.M365_CLIENT_SECRET,
+};
+// const oboAuthConfig: OnBehalfOfCredentialAuthConfig = {
+//     authorityHost: process.env.M365_AUTHORITY_HOST,
+//     clientId: process.env.M365_CLIENT_ID,
+//     tenantId: process.env.M365_TENANT_ID,
+//     clientSecret: process.env.M365_CLIENT_SECRET,
+// };
+
+const initialLoginEndpoint = process.env.INITIATE_LOGIN_ENDPOINT;
+const clientId = "24AF0CDE-FE17-4D47-8D2F-AFFFBD1167D2";
+const scopes = "vso.work_full";
+
+export class TeamsBot extends TeamsActivityHandler {
+    constructor() {
+        super();
+    }
+
+    public async handleTeamsMessagingExtensionQuery(context: TurnContext, query: any): Promise<any> {
+        // eslint-disable-next-line no-secrets/no-secrets
+        /**
+         * User Code Here.
+         * If query without token, no need to implement handleMessageExtensionQueryWithSSO;
+         * Otherwise, just follow the sample code below to modify the user code.
+         */
+        //const a = context.turnState.get(context.adapter.ConnectorClientKey);
+
+        console.log('return handleMessageExtensionQueryWithSSO');
+        const valueObj = context.activity.value;
+        //const scopes = "vso.work_full";
+        if (!valueObj.authentication || !valueObj.authentication.token) {
+            console.log("No AccessToken in request, return silentAuth for AccessToken");
+            const response = this.getSignInResponseForMessageExtensionWithAuthConfig(
+                clientId,
+                initialLoginEndpoint,
+                scopes
+            );
+            await context.sendActivity({
+                value: { status: 200, body: response },
+                type: ActivityTypes.InvokeResponse,
+            });
+        }
+
+        // return await handleMessageExtensionQueryWithSSO(
+        //     context,
+        //     oboAuthConfig,
+        //     initialLoginEndpoint,
+        //     ["User.Read", "Sites.Read.All"],
+        //     async (token: MessageExtensionTokenResponse) => {
+        //         // User Code
+        //         console.log(`user token: ${token.ssoToken}`);
+
+        //         // Init OnBehalfOfUserCredential instance with SSO token
+        //         const credential = new OnBehalfOfUserCredential(token.ssoToken, oboAuthConfig);
+
+        //         // get token: 
+        //         const testToken = await credential.getToken(["User.Read", "Sites.Read.All"]);
+        //         console.log(`testToken: ${testToken.token}`);
+
+        //         // Create an instance of the TokenCredentialAuthenticationProvider by passing the tokenCredential instance and options to the constructor
+        //         const authProvider = new TokenCredentialAuthenticationProvider(credential, {
+        //             scopes: ["User.Read", "Sites.Read.All"],
+        //         });
+
+        //         // Initialize Graph client instance with authProvider
+        //         const graphClient = Client.initWithMiddleware({
+        //             authProvider: authProvider,
+        //         });
+
+        //         // Call graph api use `graph` instance to get user profile information.
+        //         const profile = await graphClient.api("/me").get();
+
+        //         // Organize thumbnailCard to display User's profile info.
+        //         const thumbnailCard = CardFactory.thumbnailCard(profile.displayName, profile.mail);
+
+        //         // Message Extension return the user profile info to user.
+        //         return {
+        //             composeExtension: {
+        //                 type: "result",
+        //                 attachmentLayout: "list",
+        //                 attachments: [thumbnailCard],
+        //             },
+        //         };
+        //     }
+        // );
+    }
+
+    // The user has chosen to accept the settings by pressing the)
+    protected override async handleTeamsMessagingExtensionConfigurationQuerySettingUrl(_context: TurnContext, _query: MessagingExtensionQuery): Promise<MessagingExtensionResponse> {
+        console.log('return handleTeamsMessagingExtensionConfigurationQuerySettingUrl');
+        const linkUrl = initialLoginEndpoint.replace('auth-start.html', 'auth-config.html');
+        return {
+            composeExtension: {
+                type: "config",
+                suggestedActions: {
+                    actions: [
+                        {
+                            type: "openUrl",
+                            value: linkUrl,
+                            title: "Settings",
+                        },
+                    ],
+                },
+            },
+        };
+    }
+
+    // Overloaded function. Receives invoke activities with the name 'composeExtension/setting
+    protected override async handleTeamsMessagingExtensionConfigurationSetting(_context: TurnContext, _settings: any): Promise<void> {
+        console.log('return handleTeamsMessagingExtensionConfigurationSetting');
+        // When the user submits the settings page, this event is fired.
+        if (_settings.state != null) {
+            //await this.userConfigurationProperty.set(_context, _settings.state);
+        }
+    }
+
+    protected handleTeamsSigninTokenExchange(_context: TurnContext, _query: SigninStateVerificationQuery): Promise<void> {
+        console.log('return handleTeamsSigninTokenExchange', _context);
+        return super.handleTeamsSigninTokenExchange(_context, _query);
+    }
+    protected handleTeamsSigninVerifyState(_context: TurnContext, _query: SigninStateVerificationQuery): Promise<void> {
+        console.log('return handleTeamsSigninVerifyState', _context);
+        return super.handleTeamsSigninVerifyState(_context, _query);
+    }
+
+    private getSignInResponseForMessageExtensionWithAuthConfig(
+        clientId: string,
+        initiateLoginEndpoint: string,
+        scopes: string | string[]
+    ): any {
+        const scopesArray = this.getScopesArray(scopes);
+        const signInLink = `${initiateLoginEndpoint}?scope=${encodeURI(scopesArray.join(" "))}&clientId=${clientId}`;
+        return {
+            composeExtension: {
+                type: "silentAuth",
+                suggestedActions: {
+                    actions: [
+                        {
+                            type: "openUrl",
+                            value: signInLink,
+                            title: "Message Extension OAuth",
+                        },
+                    ],
+                },
+            },
+        };
+    }
+    private getSignInResponseForMessageExtensionWithSilentAuthConfig(
+        clientId: string,
+        initiateLoginEndpoint: string,
+        scopes: string | string[]
+    ): any {
+        const scopesArray = this.getScopesArray(scopes);
+        const signInLink = `${initiateLoginEndpoint}?scope=${encodeURI(scopesArray.join(" "))}&clientId=${clientId}`;
+        return {
+            composeExtension: {
+                type: "silentAuth",
+                suggestedActions: {
+                    actions: [
+                        {
+                            type: "openUrl",
+                            value: signInLink,
+                            title: "Message Extension OAuth",
+                        },
+                    ],
+                },
+            },
+        };
+    }
+    private getScopesArray(scopes: string | string[]): string[] {
+        const scopesArray: string[] = typeof scopes === "string" ? scopes.split(" ") : scopes;
+        return scopesArray.filter((x) => x !== null && x !== "");
+    }
+
+    public async handleTeamsMessagingExtensionSelectItem(
+        context: TurnContext,
+        obj: any
+    ): Promise<any> {
+        return {
+            composeExtension: {
+                type: "result",
+                attachmentLayout: "list",
+                attachments: [CardFactory.heroCard(obj.name, obj.description)],
+            },
+        };
+    }
+}

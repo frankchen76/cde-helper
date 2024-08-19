@@ -1,0 +1,578 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "${{TEAMS_APP_ID}}",
+    "packageName": "com.microsoft.teams.extension",
+    "developer": {
+        "name": "Frank Chen",
+        "websiteUrl": "https://www.example.com",
+        "privacyUrl": "https://www.example.com/privacy",
+        "termsOfUseUrl": "https://www.example.com/termofuse"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "podhelper${{APP_NAME_SUFFIX}}",
+        "full": "full name for podhelper"
+    },
+    "description": {
+        "short": "podhelper allows you to find tasks which you have done with various customers",
+        "full": "podhelper is the ultimate tool for managing your tasks done for M365 POD support. With its intuitive interface and powerful features, you'll be able to easily find your tasks by name, customer, status, tag and time. \n\n **Why Choose PODHelper:** \n\n PODHelper is the perfect solution for individual to keep track of their task’s status. \n\n **Features and Benefits:** \n\n - Easy task Search through Microsoft Copilot. Simply start by saying, 'Find tasks done for customer xyz' \r  - User-Friendly Interface: PODHelper's intuitive interface makes it easy to navigate and use \n\n **Availability:** \n\n To use PODHelper, you'll need an active Microsoft 365 account . Ensure that your administrator enables the app for your Microsoft 365 account."
+    },
+    "accentColor": "#FFFFFF",
+    "bots": [
+        {
+            "botId": "${{BOT_ID}}",
+            "scopes": [
+                "personal",
+                "team",
+                "groupChat"
+            ],
+            "supportsFiles": false,
+            "isNotificationOnly": false
+        }
+    ],
+    "composeExtensions": [
+        {
+            "botId": "${{BOT_ID}}",
+            "commands": [
+                {
+                    "id": "searchQuery",
+                    "initialRun": true,
+                    "context": [
+                        "compose",
+                        "commandBox"
+                    ],
+                    "description": "Search tasks by name, customer, status and tag",
+                    "title": "Task Search",
+                    "type": "query",
+                    "parameters": [
+                        {
+                            "name": "taskName",
+                            "title": "Task name",
+                            "description": "Enter a task name her",
+                            "inputType": "text"
+                        },
+                        {
+                            "name": "customerName",
+                            "title": "Customer name",
+                            "description": "Enter the customer name of the task",
+                            "inputType": "text"
+                        },
+                        {
+                            "name": "taskStatus",
+                            "title": "Task Status",
+                            "description": "Enter the status of the task. convert status to one of 'to do', 'doing' or 'done'. leave it empty if cannot convert",
+                            "inputType": "text"
+                        },
+                        {
+                            "name": "taskCreationDate",
+                            "title": "Creation Date",
+                            "description": "Task creation date range.convert date format based on today like yyyy/MM/dd.Output format:{\"s\":\"<start date>\", \"e\":\"<end date>\"}",
+                            "inputType": "text"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "configurableTabs": [],
+    "staticTabs": [],
+    "permissions": [
+        "identity",
+        "messageTeamMembers"
+    ],
+    "validDomains": [
+        "https://app.vssps.visualstudio.com",
+        "https://login.microsoftonline.com",
+        "https://msft.sts.microsoft.com",
+        "https://certauth.msft.sts.microsoft.com",
+        "dev.azure.com",
+        "${{BOT_DOMAIN}}"
+    ],
+    "showLoadingIndicator": false,
+    "isFullScreen": false,
+    "defaultBlockUntilAdminAction": false,
+    "authorization": {
+        "permissions": {
+            "resourceSpecific": [
+                {
+                    "name": "Mailbox.ReadWrite.User",
+                    "type": "Delegated"
+                }
+            ]
+        }
+    },
+    "extensions": [
+        {
+            "requirements": {
+                "capabilities": [
+                    {
+                        "name": "Mailbox",
+                        "minVersion": "1.5"
+                    }
+                ],
+                "scopes": [
+                    "mail"
+                ]
+            },
+            "runtimes": [
+                {
+                    "requirements": {
+                        "capabilities": [
+                            {
+                                "name": "Mailbox",
+                                "minVersion": "1.5"
+                            }
+                        ],
+                        "formFactors": [
+                            "desktop"
+                        ]
+                    },
+                    "id": "CommandsRuntime",
+                    "type": "general",
+                    "code": {
+                        "page": "${{BOT_ENDPOINT}}/web/commands.html",
+                        "script": "${{BOT_ENDPOINT}}/web/scripts/commands.js"
+                    },
+                    "lifetime": "short",
+                    "actions": [
+                        {
+                            "id": "openTaskView",
+                            "type": "executeFunction",
+                            "displayName": "openTaskView"
+                        }
+                    ]
+                },
+                {
+                    "requirements": {
+                        "capabilities": [
+                            {
+                                "name": "Mailbox",
+                                "minVersion": "1.5"
+                            }
+                        ]
+                    },
+                    "id": "TaskpaneRuntime",
+                    "type": "general",
+                    "code": {
+                        "page": "${{BOT_ENDPOINT}}/web/taskpane.html?origin=outlooktaskpane"
+                    },
+                    "lifetime": "short",
+                    "actions": [
+                        {
+                            "id": "OpenTaskViewPane",
+                            "type": "openPage",
+                            "displayName": "OpenTaskViewPane",
+                            "pinnable": true,
+                            "view": "view_1"
+                        }
+                    ]
+                },
+                {
+                    "requirements": {
+                        "capabilities": [
+                            {
+                                "name": "Mailbox",
+                                "minVersion": "1.5"
+                            }
+                        ]
+                    },
+                    "id": "runtime_3",
+                    "type": "general",
+                    "code": {
+                        "page": "${{BOT_ENDPOINT}}/web/taskpane.html?origin=outlooktaskpane#/taskitem/0/0"
+                    },
+                    "lifetime": "short",
+                    "actions": [
+                        {
+                            "id": "AddTaskViewPane",
+                            "type": "openPage",
+                            "displayName": "AddTaskViewPane",
+                            "pinnable": true,
+                            "view": "view_2"
+                        }
+                    ]
+                }
+            ],
+            "ribbons": [
+                {
+                    "requirements": {
+                        "capabilities": [
+                            {
+                                "name": "Mailbox",
+                                "minVersion": "1.5"
+                            }
+                        ],
+                        "scopes": [
+                            "mail"
+                        ],
+                        "formFactors": [
+                            "desktop"
+                        ]
+                    },
+                    "contexts": [
+                        "mailRead"
+                    ],
+                    "tabs": [
+                        {
+                            "builtInTabId": "MessageRead.Tab",
+                            "groups": [
+                                {
+                                    "id": "MessageRead.Group",
+                                    "label": "podhelper-${{APP_NAME_SUFFIX}}",
+                                    "icons": [
+                                        {
+                                            "size": 16,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon16.png"
+                                        },
+                                        {
+                                            "size": 32,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon32.png"
+                                        },
+                                        {
+                                            "size": 80,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon80.png"
+                                        }
+                                    ],
+                                    "controls": [
+                                        {
+                                            "id": "MessageRead.btnShowTaskView",
+                                            "type": "button",
+                                            "label": "Open TaskView",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Open TaskView Pane",
+                                                "description": "Opens a pane displaying all tasks."
+                                            },
+                                            "actionId": "OpenTaskViewPane",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        },
+                                        {
+                                            "id": "MessageRead.btnAddTask",
+                                            "type": "button",
+                                            "label": "Add Task/Event",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Add Task/Event",
+                                                "description": "Opens a pane to add a task or event."
+                                            },
+                                            "actionId": "AddTaskViewPane",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        },
+                                        {
+                                            "id": "MessageRead.btnShowTaskViewDialog",
+                                            "type": "button",
+                                            "label": "Open TaskView Dialog",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Open TaskView Dialog",
+                                                "description": "Opens a dialog displaying all tasks."
+                                            },
+                                            "actionId": "openTaskView",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "requirements": {
+                        "capabilities": [
+                            {
+                                "name": "Mailbox",
+                                "minVersion": "1.5"
+                            }
+                        ],
+                        "scopes": [
+                            "mail"
+                        ],
+                        "formFactors": [
+                            "desktop"
+                        ]
+                    },
+                    "contexts": [
+                        "meetingDetailsAttendee"
+                    ],
+                    "tabs": [
+                        {
+                            "builtInTabId": "AppointmentAttendee.Tab",
+                            "groups": [
+                                {
+                                    "id": "AppointmentAttendee.Group",
+                                    "label": "podhelper-${{APP_NAME_SUFFIX}}",
+                                    "icons": [
+                                        {
+                                            "size": 16,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon16.png"
+                                        },
+                                        {
+                                            "size": 32,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon32.png"
+                                        },
+                                        {
+                                            "size": 80,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon80.png"
+                                        }
+                                    ],
+                                    "controls": [
+                                        {
+                                            "id": "AppointmentAttendee.btnShowTaskView",
+                                            "type": "button",
+                                            "label": "Open TaskView",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Open TaskView Pane",
+                                                "description": "Opens a pane displaying all tasks."
+                                            },
+                                            "actionId": "OpenTaskViewPane",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        },
+                                        {
+                                            "id": "AppointmentAttendee.btnAddTask",
+                                            "type": "button",
+                                            "label": "Add Task/Event",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Add Task/Event",
+                                                "description": "Opens a pane to add a task or event."
+                                            },
+                                            "actionId": "AddTaskViewPane",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        },
+                                        {
+                                            "id": "AppointmentAttendee.btnShowTaskViewDialog",
+                                            "type": "button",
+                                            "label": "Open TaskView Dialog",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Open TaskView Dialog",
+                                                "description": "Opens a dialog displaying all tasks."
+                                            },
+                                            "actionId": "openTaskView",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "requirements": {
+                        "capabilities": [
+                            {
+                                "name": "Mailbox",
+                                "minVersion": "1.5"
+                            }
+                        ],
+                        "scopes": [
+                            "mail"
+                        ],
+                        "formFactors": [
+                            "desktop"
+                        ]
+                    },
+                    "contexts": [
+                        "meetingDetailsOrganizer"
+                    ],
+                    "tabs": [
+                        {
+                            "builtInTabId": "AppointmentOrganizer.Tab",
+                            "groups": [
+                                {
+                                    "id": "AppointmentOrganizer.Group",
+                                    "label": "podhelper-${{APP_NAME_SUFFIX}}",
+                                    "icons": [
+                                        {
+                                            "size": 16,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon16.png"
+                                        },
+                                        {
+                                            "size": 32,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon32.png"
+                                        },
+                                        {
+                                            "size": 80,
+                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon80.png"
+                                        }
+                                    ],
+                                    "controls": [
+                                        {
+                                            "id": "AppointmentOrganizer.btnShowTaskView",
+                                            "type": "button",
+                                            "label": "Open TaskView",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Open TaskView Pane",
+                                                "description": "Opens a pane displaying all tasks."
+                                            },
+                                            "actionId": "OpenTaskViewPane",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        },
+                                        {
+                                            "id": "AppointmentOrganizer.btnAddTask",
+                                            "type": "button",
+                                            "label": "Add Task/Event",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Add Task/Event",
+                                                "description": "Opens a pane to add a task or event."
+                                            },
+                                            "actionId": "AddTaskViewPane",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        },
+                                        {
+                                            "id": "AppointmentOrganizer.btnShowTaskViewDialog",
+                                            "type": "button",
+                                            "label": "Open TaskView Dialog",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Open TaskView Dialog",
+                                                "description": "Opens a dialog displaying all tasks."
+                                            },
+                                            "actionId": "openTaskView",
+                                            "overriddenByRibbonApi": false,
+                                            "enabled": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "audienceClaimUrl": "${{BOT_ENDPOINT}}/web/taskpane.html"
+        }
+    ]
+}
