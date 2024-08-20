@@ -94,7 +94,7 @@ const config = [{
         path: path.join(__dirname, "/dist/web/scripts"),
         filename: "[name].js",
         libraryTarget: "umd",
-        library: "podhelper",
+        library: "cde-helper",
         publicPath: "scripts/" // relative to the HTML file
     },
     externals: {},

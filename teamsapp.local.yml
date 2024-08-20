@@ -8,7 +8,7 @@ provision:
   - uses: teamsApp/create
     with:
       # Teams app name
-      name: podhelper${{APP_NAME_SUFFIX}}
+      name: cde-helper${{APP_NAME_SUFFIX}}
     # Write the information of created resources into environment file for
     # the specified environment variable(s).
     writeToEnvironmentFile:
@@ -18,7 +18,7 @@ provision:
   - uses: aadApp/create
     with:
       # The Microsoft Entra application's display name
-      name: podhelper${{APP_NAME_SUFFIX}}
+      name: cde-helper${{APP_NAME_SUFFIX}}
       generateClientSecret: true
       signInAudience: AzureADMultipleOrgs
     writeToEnvironmentFile:
@@ -33,8 +33,8 @@ provision:
   - uses: botFramework/create
     with:
       botId: ${{BOT_ID}}
-      name: podhelper
-      messagingEndpoint: ${{BOT_ENDPOINT}}/api/messages
+      name: cde-helper
+      messagingEndpoint: https://${{BOT_DOMAIN}}/api/messages
       description: ""
       channels:
         - name: msteams
@@ -92,15 +92,15 @@ deploy:
       envs:
         BOT_ID: ${{BOT_ID}}
         BOT_PASSWORD: ${{SECRET_BOT_PASSWORD}}
-        INITIATE_LOGIN_ENDPOINT: ${{BOT_ENDPOINT}}/web/auth-start.html
+        INITIATE_LOGIN_ENDPOINT: https://${{BOT_DOMAIN}}/web/auth-start.html
         DEBUG: ${{DEBUG}}
-        # PODHelper-AzureDevOps Entra Id App
+        # cde-helper-AzureDevOps Entra Id App
         TENANT_ID: ${{TENANT_ID}}
         CLIENT_ID: ${{CLIENT_ID}}
         CLIENT_SECRET: ${{CLIENT_SECRET}}
         SCOPES: ${{SCOPES}}
         PROJECT_URL: ${{PROJECT_URL}}
-        REDIRECT_URL: ${{BOT_ENDPOINT}}/web/auth-end.html
+        REDIRECT_URL: https://${{BOT_DOMAIN}}/web/auth-end.html
         # Cosmos DB
         COSMOSDBENDPOINT: ${{COSMOSDBENDPOINT}}
         COSMOSDBID: ${{COSMOSDBID}}

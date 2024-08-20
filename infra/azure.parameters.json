@@ -1,21 +1,48 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "resourceBaseName": {
-      "value": "ME${{RESOURCE_SUFFIX}}"
-    },
-    "botAadAppClientId": {
-      "value": "${{BOT_ID}}"
-    },
-    "botAadAppClientSecret": {
-      "value": "${{SECRET_BOT_PASSWORD}}"
-    },
-    "webAppSKU": {
-      "value": "B1"
-    },
-    "botDisplayName": {
-      "value": "podhelper"
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceBaseName": {
+            "value": "${{RESOURCE_SUFFIX}}"
+        },
+        "botAadAppClientId": {
+            "value": "${{BOT_ID}}"
+        },
+        "botAadAppClientSecret": {
+            "value": "${{SECRET_BOT_PASSWORD}}"
+        },
+        "webAppSKU": {
+            "value": "B1"
+        },
+        "botDisplayName": {
+            "value": "cde-helper"
+        },
+        "debugValue": {
+            "value": "${{DEBUG}}"
+        },
+        "tenantId": {
+            "value": "${{TENANT_ID}}"
+        },
+        "clientId": {
+            "value": "${{CLIENT_ID}}"
+        },
+        "clientSecret": {
+            "value": "${{CLIENT_SECRET}}"
+        },
+        "scopes": {
+            "value": "${{SCOPES}}"
+        },
+        "projectUrl": {
+            "value": "${{PROJECT_URL}}"
+        },
+        "cosmosDb_Endpoint": {
+            "value": "${{COSMOSDBENDPOINT}}"
+        },
+        "cosmosDb_Id": {
+            "value": "${{COSMOSDBID}}"
+        },
+        "cosmosDb_Key": {
+            "value": "${{COSMOSDBKEY}}"
+        }
     }
-  }
 }

@@ -15,12 +15,12 @@
         "outline": "outline.png"
     },
     "name": {
-        "short": "podhelper${{APP_NAME_SUFFIX}}",
-        "full": "full name for podhelper"
+        "short": "cde-helper${{APP_NAME_SUFFIX}}",
+        "full": "full name for cde-helper"
     },
     "description": {
-        "short": "podhelper allows you to find tasks which you have done with various customers",
-        "full": "podhelper is the ultimate tool for managing your tasks done for M365 POD support. With its intuitive interface and powerful features, you'll be able to easily find your tasks by name, customer, status, tag and time. \n\n **Why Choose PODHelper:** \n\n PODHelper is the perfect solution for individual to keep track of their task’s status. \n\n **Features and Benefits:** \n\n - Easy task Search through Microsoft Copilot. Simply start by saying, 'Find tasks done for customer xyz' \r  - User-Friendly Interface: PODHelper's intuitive interface makes it easy to navigate and use \n\n **Availability:** \n\n To use PODHelper, you'll need an active Microsoft 365 account . Ensure that your administrator enables the app for your Microsoft 365 account."
+        "short": "cde-helper allows you to find tasks which you have done with various customers",
+        "full": "cde-helper is the ultimate tool for managing your tasks done for M365 CDE support. With its intuitive interface and powerful features, you'll be able to easily find your tasks by name, customer, status, tag and time. \n\n **Why Choose cde-helper:** \n\n cde-helper is the perfect solution for individual to keep track of their task’s status. \n\n **Features and Benefits:** \n\n - Easy task Search through Microsoft Copilot. Simply start by saying, 'Find tasks done for customer xyz' \r  - User-Friendly Interface: cde-helper's intuitive interface makes it easy to navigate and use \n\n **Availability:** \n\n To use cde-helper, you'll need an active Microsoft 365 account . Ensure that your administrator enables the app for your Microsoft 365 account."
     },
     "accentColor": "#FFFFFF",
     "bots": [
@@ -135,8 +135,8 @@
                     "id": "CommandsRuntime",
                     "type": "general",
                     "code": {
-                        "page": "${{BOT_ENDPOINT}}/web/commands.html",
-                        "script": "${{BOT_ENDPOINT}}/web/scripts/commands.js"
+                        "page": "https://${{BOT_DOMAIN}}/web/commands.html",
+                        "script": "https://${{BOT_DOMAIN}}/web/scripts/commands.js"
                     },
                     "lifetime": "short",
                     "actions": [
@@ -159,7 +159,7 @@
                     "id": "TaskpaneRuntime",
                     "type": "general",
                     "code": {
-                        "page": "${{BOT_ENDPOINT}}/web/taskpane.html?origin=outlooktaskpane"
+                        "page": "https://${{BOT_DOMAIN}}/web/taskpane.html?origin=outlooktaskpane"
                     },
                     "lifetime": "short",
                     "actions": [
@@ -184,7 +184,7 @@
                     "id": "runtime_3",
                     "type": "general",
                     "code": {
-                        "page": "${{BOT_ENDPOINT}}/web/taskpane.html?origin=outlooktaskpane#/taskitem/0/0"
+                        "page": "https://${{BOT_DOMAIN}}/web/taskpane.html?origin=outlooktaskpane#/taskitem/0/0"
                     },
                     "lifetime": "short",
                     "actions": [
@@ -223,19 +223,19 @@
                             "groups": [
                                 {
                                     "id": "MessageRead.Group",
-                                    "label": "podhelper-${{APP_NAME_SUFFIX}}",
+                                    "label": "cde-helper${{APP_NAME_SUFFIX}}",
                                     "icons": [
                                         {
                                             "size": 16,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon16.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon16.png"
                                         },
                                         {
                                             "size": 32,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon32.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon32.png"
                                         },
                                         {
                                             "size": 80,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon80.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon80.png"
                                         }
                                     ],
                                     "controls": [
@@ -246,15 +246,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -272,15 +272,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -298,15 +298,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -347,19 +347,19 @@
                             "groups": [
                                 {
                                     "id": "AppointmentAttendee.Group",
-                                    "label": "podhelper-${{APP_NAME_SUFFIX}}",
+                                    "label": "cde-helper${{APP_NAME_SUFFIX}}",
                                     "icons": [
                                         {
                                             "size": 16,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon16.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon16.png"
                                         },
                                         {
                                             "size": 32,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon32.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon32.png"
                                         },
                                         {
                                             "size": 80,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon80.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon80.png"
                                         }
                                     ],
                                     "controls": [
@@ -370,15 +370,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -396,15 +396,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -422,15 +422,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -471,19 +471,19 @@
                             "groups": [
                                 {
                                     "id": "AppointmentOrganizer.Group",
-                                    "label": "podhelper-${{APP_NAME_SUFFIX}}",
+                                    "label": "cde-helper-${{APP_NAME_SUFFIX}}",
                                     "icons": [
                                         {
                                             "size": 16,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon16.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon16.png"
                                         },
                                         {
                                             "size": 32,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon32.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon32.png"
                                         },
                                         {
                                             "size": 80,
-                                            "url": "${{BOT_ENDPOINT}}/web/assets/icon80.png"
+                                            "url": "https://${{BOT_DOMAIN}}/web/assets/icon80.png"
                                         }
                                     ],
                                     "controls": [
@@ -494,15 +494,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskview80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskview80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -520,15 +520,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskitem80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskitem80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -546,15 +546,15 @@
                                             "icons": [
                                                 {
                                                     "size": 16,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup16.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup16.png"
                                                 },
                                                 {
                                                     "size": 32,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup32.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup32.png"
                                                 },
                                                 {
                                                     "size": 80,
-                                                    "url": "${{BOT_ENDPOINT}}/web/assets/taskviewpopup80.png"
+                                                    "url": "https://${{BOT_DOMAIN}}/web/assets/taskviewpopup80.png"
                                                 }
                                             ],
                                             "supertip": {
@@ -572,7 +572,7 @@
                     ]
                 }
             ],
-            "audienceClaimUrl": "${{BOT_ENDPOINT}}/web/taskpane.html"
+            "audienceClaimUrl": "https://${{BOT_DOMAIN}}/web/taskpane.html"
         }
     ]
 }

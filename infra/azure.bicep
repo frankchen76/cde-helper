@@ -19,13 +19,40 @@ param serverfarmsName string = resourceBaseName
 param webAppName string = resourceBaseName
 param location string = resourceGroup().location
 
+param debugValue string
+param tenantId string
+param clientId string
+param scopes string
+param projectUrl string
+// param redirectUrl string
+@secure()
+param clientSecret string
+
+param cosmosDb_Endpoint string
+param cosmosDb_Id string
+@secure()
+param cosmosDb_Key string
+
 // Compute resources for your Web App
+// resource serverfarm 'Microsoft.Web/serverfarms@2021-02-01' = {
+//   kind: 'app'
+//   location: location
+//   name: serverfarmsName
+//   sku: {
+//     name: webAppSKU
+//   }
+// }
+
+// provisioning linux machine
 resource serverfarm 'Microsoft.Web/serverfarms@2021-02-01' = {
-  kind: 'app'
   location: location
   name: serverfarmsName
   sku: {
     name: webAppSKU
+  }
+  kind: 'linux'
+  properties: {
+    reserved: true
   }
 }
 
@@ -40,10 +67,10 @@ resource webApp 'Microsoft.Web/sites@2021-02-01' = {
     siteConfig: {
       alwaysOn: true
       appSettings: [
-        {
-          name: 'WEBSITE_RUN_FROM_PACKAGE'
-          value: '1' // Run Azure APP Service from a package file
-        }
+        // {
+        //   name: 'WEBSITE_RUN_FROM_PACKAGE'
+        //   value: '1' // Run Azure APP Service from a package file
+        // }
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
           value: '~18' // Set NodeJS version to 18.x for your site
@@ -59,6 +86,46 @@ resource webApp 'Microsoft.Web/sites@2021-02-01' = {
         {
           name: 'BOT_PASSWORD'
           value: botAadAppClientSecret
+        }
+        {
+          name: 'DEBUG'
+          value: debugValue
+        }
+        {
+          name: 'TENANT_ID'
+          value: tenantId
+        }
+        {
+          name: 'CLIENT_ID'
+          value: clientId
+        }
+        {
+          name: 'CLIENT_SECRET'
+          value: clientSecret
+        }
+        {
+          name: 'SCOPES'
+          value: scopes
+        }
+        {
+          name: 'PROJECT_URL'
+          value: projectUrl
+        }
+        {
+          name: 'REDIRECT_URL'
+          value: ''
+        }
+        {
+          name: 'COSMOSDBENDPOINT'
+          value: cosmosDb_Endpoint
+        }
+        {
+          name: 'COSMOSDBID'
+          value: cosmosDb_Id
+        }
+        {
+          name: 'COSMOSDBKEY'
+          value: cosmosDb_Key
         }
       ]
       ftpsState: 'FtpsOnly'

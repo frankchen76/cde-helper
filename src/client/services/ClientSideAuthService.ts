@@ -7,8 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 export class ClientSideAuthService {
-    private static CACHE_TOKEN = "podhelper-token";
-    //private static _token: IToken = null;
+    private static CACHE_TOKEN = "cde-helper-token";
+    //private static _token: IToken = null; 
     private static TENANT_ID = "6f423eb7-7932-4e19-ae14-fa375038681b";
     private static CLIENT_ID = "d5be9481-3999-4101-b0a2-99834cf4c1ad";
     private static SCOPE = "https://app.vssps.visualstudio.com/.default";
