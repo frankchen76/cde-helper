@@ -35,7 +35,7 @@
             {
                 "areaId": 23,
                 "areaName": "McKinsey",
-                "enabled": false,
+                "enabled": true,
                 "emailDomains": [
                     "McKinsey.com"
                 ]
@@ -84,7 +84,7 @@
             {
                 "areaId": 29,
                 "areaName": "Wilmerhale",
-                "enabled": false,
+                "enabled": true,
                 "emailDomains": [
                     "wilmerhale.com"
                 ]
