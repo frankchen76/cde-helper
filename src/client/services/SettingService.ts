@@ -40,7 +40,7 @@ export class Setting {
         public apiKey: string = "") {
 
     }
-    public get DefaultSetting(): ISettingItem {
+    public get DefaultSettingItem(): ISettingItem {
         //return this.items.find(s => s.id == this.defaultSettingId);
         return this.items && Array.isArray(this.items) ? this.items.find(s => s.id == this.defaultSettingId) : null;
     }
@@ -106,7 +106,7 @@ export class Setting {
     public getSettingItemById(id: string): ISettingItem {
         let ret = this.items.find(i => i.id == id);
         if (!ret) {
-            ret = this.DefaultSetting;
+            ret = this.DefaultSettingItem;
         }
         return ret;
     }

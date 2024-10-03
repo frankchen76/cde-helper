@@ -1,0 +1,104 @@
+{
+    "items": [
+        {
+            "id": "CDE2",
+            "name": "CDE2",
+            "tasksQueryId": "768a2979-bed7-4641-9226-62984e475e46",
+            "issuesQueryId": "cb2e60a3-1d13-4c05-8808-1959201eaf64",
+            "reportQueryId": "ae7c5d13-f870-4d14-9f98-738234c738f0",
+            "baseUrl": "https://dev.azure.com/ezcode-repo/CDE02",
+            "areas": [
+                {
+                    "areaId": 20,
+                    "areaName": "AARP",
+                    "enabled": true,
+                    "emailDomains": [
+                        "aarp.org"
+                    ]
+                },
+                {
+                    "areaId": 21,
+                    "areaName": "BCG",
+                    "enabled": true,
+                    "emailDomains": [
+                        "bcg.com"
+                    ]
+                },
+                {
+                    "areaId": 22,
+                    "areaName": "ConEd",
+                    "enabled": true,
+                    "emailDomains": [
+                        "coned.com"
+                    ]
+                },
+                {
+                    "areaId": 23,
+                    "areaName": "McKinsey",
+                    "enabled": true,
+                    "emailDomains": [
+                        "McKinsey.com"
+                    ]
+                },
+                {
+                    "areaId": 24,
+                    "areaName": "Omnicom",
+                    "enabled": true,
+                    "emailDomains": null
+                },
+                {
+                    "areaId": 25,
+                    "areaName": "Paramount",
+                    "enabled": true,
+                    "emailDomains": [
+                        "viacomcontractor.com"
+                    ]
+                },
+                {
+                    "areaId": 26,
+                    "areaName": "PSEG",
+                    "enabled": true,
+                    "emailDomains": [
+                        "pseg.com"
+                    ]
+                },
+                {
+                    "areaId": 27,
+                    "areaName": "PwC",
+                    "enabled": true,
+                    "emailDomains": [
+                        "pwc.com"
+                    ]
+                },
+                {
+                    "areaId": 28,
+                    "areaName": "Relx",
+                    "enabled": true,
+                    "emailDomains": [
+                        "relx.com",
+                        "lexisnexis.com",
+                        "lexisnexisrisk.com",
+                        "elsevier.com"
+                    ]
+                },
+                {
+                    "areaId": 32,
+                    "areaName": "Transactional",
+                    "enabled": true,
+                    "emailDomains": []
+                },
+                {
+                    "areaId": 29,
+                    "areaName": "Wilmerhale",
+                    "enabled": true,
+                    "emailDomains": [
+                        "wilmerhale.com"
+                    ]
+                }
+            ]
+        }
+    ],
+    "upn": "tachen@microsoft.com",
+    "defaultSettingId": "CDE2",
+    "apiKey": "fbec99af-b0e7-4b63-89d4-8fb5f97504f6"
+}

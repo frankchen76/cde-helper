@@ -12,6 +12,8 @@ import {
     ConversationState,
     StatePropertyAccessor,
     InvokeResponse,
+    MessagingExtensionAction,
+    MessagingExtensionActionResponse,
 } from "botbuilder";
 import config from "../config";
 import { AzureDevOpsTokenProvider, BotStateTokenStore, IUserToken, IAuthCode, IAzureDevOpsProviderConfig } from "../services/AzureDevOpsTokenProvider";
@@ -103,6 +105,26 @@ export class TeamsBot extends TeamsActivityHandler {
     //     };
     // }
 
+    public async handleTeamsMessagingExtensionFetchTask(context: TurnContext, action: MessagingExtensionAction): Promise<MessagingExtensionActionResponse> {
+        console.log('return handleTeamsMessagingExtensionFetchTask');
+        switch (action.commandId) {
+            case 'addMessage':
+                return this.showAddMessageView();
+        }
+    }
+    private showAddMessageView(): MessagingExtensionActionResponse {
+        return {
+            task: {
+                type: 'continue',
+                value: {
+                    title: 'Add a message',
+                    height: 800,
+                    width: 600,
+                    url: `${config.botEndpoint}/web/taskpane.html?origin=msteams#/taskitem/0/0`
+                }
+            }
+        };
+    }
     public async handleTeamsMessagingExtensionQuery(context: TurnContext, query: MessagingExtensionQuery): Promise<MessagingExtensionResponse> {
         // eslint-disable-next-line no-secrets/no-secrets
         /**
@@ -203,6 +225,7 @@ export class TeamsBot extends TeamsActivityHandler {
 
     }
     private async getSignInResponseForMessageExtension(config: IAzureDevOpsProviderConfig, devOpsUser: IUserToken, context: TurnContext): Promise<any> {
+        console.log("getSignInResponseForMessageExtension");
         const teamMember = await Utils.getTeamAccount(context);
         const scopesArray = this.getScopesArray(config.scopes);
         info("teamMember", teamMember);

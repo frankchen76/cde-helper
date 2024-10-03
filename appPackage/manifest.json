@@ -75,6 +75,16 @@
                             "inputType": "text"
                         }
                     ]
+                },
+                {
+                    "id": "addMessage",
+                    "description": "Add current message to cde-helper",
+                    "title": "Add to cde-helper",
+                    "type": "action",
+                    "fetchTask": true,
+                    "context": [
+                        "message"
+                    ]
                 }
             ]
         }
@@ -471,7 +481,7 @@
                             "groups": [
                                 {
                                     "id": "AppointmentOrganizer.Group",
-                                    "label": "cde-helper-${{APP_NAME_SUFFIX}}",
+                                    "label": "cde-helper${{APP_NAME_SUFFIX}}",
                                     "icons": [
                                         {
                                             "size": 16,

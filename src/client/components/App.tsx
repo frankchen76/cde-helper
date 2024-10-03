@@ -161,7 +161,7 @@ const App = (props: AppProps) => {
                             <div className="footerbar">
                                 <Stack horizontal horizontalAlign="space-between">
                                     <div>
-                                        <span>{`Setting Name: ${serviceContext.setting.DefaultSetting && serviceContext.setting.DefaultSetting.name}`}</span>
+                                        <span>{`Setting Name: ${serviceContext.setting.DefaultSettingItem && serviceContext.setting.DefaultSettingItem.name}`}</span>
                                     </div>
                                     <div>{`v${packageInfo.version}`}</div>
                                 </Stack>

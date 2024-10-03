@@ -1,6 +1,114 @@
-# Overview of Custom Search Results template
+# CDE-Helper
 
-This app template is a search-based [message extension](https://docs.microsoft.com/microsoftteams/platform/messaging-extensions/what-are-messaging-extensions?tabs=nodejs) that allows users to search an external system and share results through the compose message area of the Microsoft Teams client. You can now build and run your search-based message extensions in Teams, Copilot for Windows desktop and web experiences.
+## Description
+This is application provided CDE search capabilities for the following applications: 
+* Outlook add-ins
+* MS Teams message extension
+* M365 Copilot plugins. 
+
+## side the project
+* run the following cmd to side the outlook add-ins. this will output a title_id which will be used to unload add-ins later
+  ```bash
+  npm run outlook:localstart
+  ```
+* run the following cmd to unload the add-ins
+  ```bash
+  npm run outlook:localstop
+  ```
+* if for some reason, you mix the deployment with another add-ins development, you might need to run the below cmd to retrieve title_id and delete it separately: 
+  ```bash
+  # login to M365 using Teamsfx CLI
+  teamsfx login
+  # get title_id via using manifest-id which is same as "id" in manifest file or "TEAMS_APP_ID" in .env.local or .env.dev files. 
+  teamsfx m365 launchinfo --manifest-id ab1c0b65-5df9-4df5-9721-2516daafc282
+  # using the title_id get from previous cmd
+  teamsfx m365 unacquire --title-id [title-id(usually start with "U_")]
+  ```
+
+## Customization from template: 
+### Update to ngrok tunnel
+* tasks.json: 
+  * add the following code to start ngrok
+  ```JSON
+         {
+            // Start ngrok local. NOTE: need to install ngrok NPM package first
+            "label": "ngrok:start",
+            "type": "shell",
+            "command": "npx ngrok http 3978 --subdomain=ezcode",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": [
+                    {
+                        "regexp": "^.*$",
+                        "file": 0,
+                        "location": 1,
+                        "message": 2
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Take our ngrok in production survey!",
+                    "endsPattern": "Connections"
+                }
+            },
+        },
+  ```
+  * commented out "Start local tunnel" in task "Start Teams App Locally" because it doesn't need to start local dev tunnel. 
+  ```JSON
+  {
+            "label": "Start Teams App Locally",
+            "dependsOn": [
+                "Validate prerequisites",
+                // "Start local tunnel",
+                "ngrok:start",
+                "Provision",
+                "Deploy",
+                "Start application"
+            ],
+            "dependsOrder": "sequence"
+        }
+  ```
+* .env.local: 
+  * updated ```BOT_DOMAIN``` to use ngrok custom domain
+  ```
+  BOT_DOMAIN=ezcode.ngrok.io
+  ``` 
+* teamsapp.local.yml: 
+  * update ```-uses botFramework/create``` to include
+  ```
+  messagingEndpoint: https://${{BOT_DOMAIN}}/api/messages
+  ```
+  * update ```-uses: file/createOrUpdateEnvironmentFile``` to include the following environment variables. 
+  ```
+        INITIATE_LOGIN_ENDPOINT: ${{BOT_ENDPOINT}}/auth-start.html
+        AZUREDEVOPS_CLIENTID: DB4D0B62-824D-4879-B24B-11B9A94AC664
+        AZUREDEVOPS_AUTHURL: https://app.vssps.visualstudio.com/oauth2/authorize
+        AZUREDEVOPS_TOKENURL: https://app.vssps.visualstudio.com/oauth2/token
+        AZUREDEVOPS_PROJECTURL: https://dev.azure.com/O365DSE/POD%208
+        AZUREDEVOPS_REDIRECTURL: https://ezcode.ngrok.io/auth-end.html
+        AZUREDEVOPS_CLIENTSECRET: [secret]
+
+  ```
+* you need to run ngrok separately, otherwise, you need to update tasks.json to automatically run it. ```ngrok http 3978 --subdomain=ezcode```
+
+## Deployment
+### Cosmos DB copy. 
+run 
+```
+C:\Tools\dmt\windows-package\dmt.exe --settings settings-CompletedTasks.json
+```
+
+### Run from package deployment
+MS Teams toolkit is using [Run your app in Azure App Service directly from a ZIP package](https://learn.microsoft.com/en-us/azure/app-service/deploy-run-package) which will provisioning a configuration ```WEBSITE_RUN_FROM_PACKAGE="1"```. After deployment, you won't be able to find the deployment from site/wwwroot folder. the Zip file is located under home\data\SitePackages and will be mount automatically. 
+```
+# generate zip file
+#./createzip.ps1
+# run 7zip to zip package.json, package-lock.json, dist and node_modules folders
+
+# run below command to make sure you are using right subscription
+az account show
+az webapp deploy --resource-group CDEHelperRG --name cdehelper-web --src-path deployment\deployment_2024090601.zip
+```
 
 ## Get started with the template
 
@@ -78,3 +186,9 @@ Following documentation will help you to extend the template.
 - [Develop with Teams Toolkit CLI](https://aka.ms/teams-toolkit-cli/debug)
 - [Preview the app on mobile clients](https://github.com/OfficeDev/TeamsFx/wiki/Run-and-debug-your-Teams-application-on-iOS-or-Android-client)
 - [Extend Microsoft 365 Copilot](https://aka.ms/teamsfx-copilot-plugin)
+
+## change logs: 
+* 1.0.3: 
+  * Moved to separate tenant for hosting
+  * fixed office ows token retriving issues. introduced backend process to renew the token to avoid long time. 
+  * enhanced the action dialog for task item

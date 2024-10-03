@@ -28,7 +28,7 @@ export class SearchTask {
         ret.area = taskResponse["fields"]["System.AreaPath"];
         ret.areaId = taskResponse["fields"]["System.AreaId"];
         ret.createdDate = taskResponse["fields"]["System.CreatedDate"];
-        ret.dueDate = taskResponse["fields"]["Microsoft.VSTS.Scheduling.DueDate"] ? new Date(taskResponse["fields"]["Microsoft.VSTS.Scheduling.DueDate"]) : null;
+        //ret.dueDate = taskResponse["fields"]["Microsoft.VSTS.Scheduling.DueDate"] ? new Date(taskResponse["fields"]["Microsoft.VSTS.Scheduling.DueDate"]) : null;
         ret.completedWork = +taskResponse["fields"]["Microsoft.VSTS.Scheduling.CompletedWork"];
         ret.tags = taskResponse["fields"]["System.Tags"];
         //ret.issue= issue
@@ -45,7 +45,7 @@ export class SearchTask {
         );
 
         // convert HTML to Markdown
-        ret.description = nhm.translate(/* html */ taskResponse["fields"]["System.Description"]);
+        ret.description = nhm.translate(/* html */ taskResponse["fields"]["System.Description"] ? taskResponse["fields"]["System.Description"] : "");
         return ret;
     }
 

@@ -123,11 +123,10 @@ server.post('/api/refreshtoken', async (req, res) => {
     let token;
     let errorMessage = "";
     try {
-        info(`refreshtoken refreshtoken:${req.body.refreshToken}`);
         token = await authService.refreshToken(req.body.refreshToken);
         res.send(200, token);
-    } catch (err) {
-        err(err);
+    } catch (error) {
+        err(error);
         res.send(400, {
             error: err
         });
@@ -143,7 +142,7 @@ server.post('/api/gettokenbyauthcode', async (req, res) => {
         info(`gettokenbyauthcode-token: ${token}`);
         res.send(200, token);
     } catch (err) {
-        err(err);
+        err("/api/gettokenbyauthcode", err);
         res.send(400, {
             error: err
         });
@@ -155,7 +154,7 @@ server.post('/api/TaskReport', authenticateBearKey, async (req: Request, res: Re
     try {
         //info("body", req.body);
         const result = await dbService.addTask(req.params.upn, req.body.tasks, req.body.reportDate);
-        info("result", result);
+        //info("result", result);
         if (result && (result.statusCode == 200 || result.statusCode == 201))
             res.send(result.statusCode, { "id": result.item.id });
         else

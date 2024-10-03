@@ -5,10 +5,12 @@ import { WorkItemService } from "./WorkItemService";
 import { find } from "lodash";
 import { ApiKeyAuthHeader, HttpClientService } from "./HttpClientService";
 import moment from "moment";
+import { error } from "./log";
 
 export interface IReportService {
     //getReportItems(settingItem: ISettingItem): Promise<ReportItemCollection>;
     getReportItems(setting: Setting): Promise<ReportItemCollection>;
+    logReportItemsToDb(apiKey: string, reportItems: ReportItemCollection): Promise<string>;
 }
 export class ReportService extends WorkItemService implements IReportService {
     private _reportTaskIncludeFields = "$expand=All";
@@ -29,9 +31,9 @@ export class ReportService extends WorkItemService implements IReportService {
 
         }
         // Log report items to DB
-        if (ret && ret.Items && ret.Items.length > 0) {
-            await this.logReportItemsToDb(setting.apiKey, ret);
-        }
+        // if (ret && ret.Items && ret.Items.length > 0) {
+        //     await this.logReportItemsToDb(setting.apiKey, ret);
+        // }
         return ret;
     }
     private async getReportItemsForSettingItem(settingItem: ISettingItem): Promise<ReportItemCollection> {
@@ -68,16 +70,21 @@ export class ReportService extends WorkItemService implements IReportService {
 
         return ret;
     }
-    private async logReportItemsToDb(apiKey: string, reportItems: ReportItemCollection): Promise<string> {
-        //const httpClientServiceWithApiKey = new HttpClientService(new ApiKeyAuthHeader(apiKey));
-        const url = `${location.protocol}//${location.host}/api/TaskReport`;
-        const body = {
-            "reportDate": moment().format("YYYY-MM-DD"),
-            "tasks": reportItems.Items
-        };
-        //const result = await httpClientServiceWithApiKey.post(url, body);
-        const result = await this._httpClientService.post(url, body);
-        return result.id;
+    public async logReportItemsToDb(apiKey: string, reportItems: ReportItemCollection): Promise<string> {
+        let ret = "";
+        try {
+            const url = `${location.protocol}//${location.host}/api/TaskReport`;
+            const body = {
+                "reportDate": moment().format("YYYY-MM-DD"),
+                "tasks": reportItems.Items
+            };
+            const result = await this._httpClientService.post(url, body);
+
+        } catch (err) {
+            error("logReportItemsToDb", err);
+            ret = err.toString();
+        }
+        return ret;
     }
     private async loadReportItemHistory(settingItem: ISettingItem, reportItem: ReportItem): Promise<void> {
 

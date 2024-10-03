@@ -28,7 +28,7 @@ export class SearchTaskService extends HttpClientService {
             wiql += ` and [System.Title] contains '${searchOption.taskName}'`;
         }
         if (searchOption.customerName) {
-            wiql += ` and [System.AreaPath] = 'POD 8\\${searchOption.customerName}'`;
+            wiql += ` and [System.AreaPath] = 'CDE02\\\\${searchOption.customerName}'`;
         }
         if (searchOption.status) {
             wiql += ` and [System.State] = '${searchOption.status}'`;

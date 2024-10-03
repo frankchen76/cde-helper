@@ -191,10 +191,10 @@ export class AzureDevOpsTokenProvider implements ITokenProvider {
         //data.append("scope", "https://manage.office.com//.default");
         data.append("grant_type", "refresh_token"); //"refresh_token",
         data.append("refresh_token", refreshToken); //req.body.refreshToken,
+        data.append("client_secret", config.clientSecret);
         const options: AxiosRequestConfig = {
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         };
-
         const res = await axios.post(url, data, options);
         return {
             access_token: res.data.access_token,

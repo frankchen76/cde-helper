@@ -24,36 +24,24 @@ const TasksReport = (props: ITasksReportProps) => {
                 const { reportService, setting } = serviceContext;
                 setExecutingResult(ExecutingResult.start());
                 const allReportItems = await reportService.getReportItems(setting);
-                // let allReportItems: ReportItemCollection = null;
-                // for (const settingItem of setting.items) {
-                //     const reportItems = await reportService.getReportItems(settingItem);
 
-                //     if (reportItems) {
-                //         if (allReportItems == null) {
-                //             allReportItems = reportItems;
-                //         } else {
-                //             allReportItems.addReportItems(reportItems.Items);
-                //         }
-                //         console.log(`settingItem: ${settingItem.id}; Report items count: ${allReportItems.Items.length}`);
-                //     }
+                // Log report items to DB
+                let dbResult = "";
+                if (allReportItems && allReportItems.Items && allReportItems.Items.length > 0) {
+                    dbResult = await reportService.logReportItemsToDb(setting.apiKey, allReportItems);
+                }
 
-                // }
-                // if (allReportItems) {
-                //     // console.log("allReportItems", allReportItems);
-                //     // console.log(JSON.stringify(allReportItems));
-                //     // log all report items
-                //     console.log("apikey", setting.apiKey);
-                //     await reportService.logReportItemsToDb(setting.apiKey, allReportItems);
-                //     const groups = allReportItems.groupByIssueArea();
-                //     setReportGroups(groups);
-                // }
                 if (allReportItems) {
                     const groups = allReportItems.groupByIssueArea();
                     setReportGroups(groups);
                 }
 
                 setReportItems(allReportItems);
-                setExecutingResult(ExecutingResult.complete(false));
+                if (dbResult === "") {
+                    setExecutingResult(ExecutingResult.complete(false));
+                } else {
+                    setExecutingResult(ExecutingResult.complete(true, dbResult, true));
+                }
 
             } catch (error) {
                 setExecutingResult(ExecutingResult.complete(true, error, true));

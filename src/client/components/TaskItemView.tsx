@@ -175,9 +175,10 @@ const TaskItemView = (props: ITaskItemViewProps) => {
                     let newTask = await taskService.updateTask(setting.upn, newSettingItem, taskValue, null, prevTask);
                     newTask.outlookMessage = task.outlookMessage;
 
+                    let categoryResult = "";
                     if (newTask.outlookMessage.ItemType == "message") {
                         // update category for message
-                        await newTask.outlookMessage.setCategory(taskValue.state, isDialog);
+                        categoryResult = await newTask.outlookMessage.setCategory(taskValue.state, isDialog);
                     }
 
                     setPrevTask(_.cloneDeep(newTask));
@@ -185,7 +186,7 @@ const TaskItemView = (props: ITaskItemViewProps) => {
                     //setIsUpdating(false);
                     setFormMode(TaskFormModeEnum.UpdateTask);
                     //setMessage("task was updated");
-                    setExecutingResult(ExecutingResult.complete(true, "Task was updated"));
+                    setExecutingResult(ExecutingResult.complete(true, `Task was updated ${categoryResult}`));
                 } catch (error) {
                     console.log("update", error);
                     //setMessage(error);

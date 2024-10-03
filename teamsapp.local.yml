@@ -33,7 +33,7 @@ provision:
   - uses: botFramework/create
     with:
       botId: ${{BOT_ID}}
-      name: cde-helper
+      name: cde-helper-${{APP_NAME_SUFFIX}}
       messagingEndpoint: https://${{BOT_DOMAIN}}/api/messages
       description: ""
       channels:
@@ -92,6 +92,7 @@ deploy:
       envs:
         BOT_ID: ${{BOT_ID}}
         BOT_PASSWORD: ${{SECRET_BOT_PASSWORD}}
+        BOT_ENDPOINT: https://${{BOT_DOMAIN}}
         INITIATE_LOGIN_ENDPOINT: https://${{BOT_DOMAIN}}/web/auth-start.html
         DEBUG: ${{DEBUG}}
         # cde-helper-AzureDevOps Entra Id App

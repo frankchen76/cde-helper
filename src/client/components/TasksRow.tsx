@@ -148,32 +148,32 @@ export const TasksRow = (props: ITasksViewProps) => {
         )();
 
     }
-    const dialogStateHandler = (ev, menuItem) => {
-        let newTask = cloneDeep(task);
-        newTask.state = menuItem.key;
-        setTask(newTask);
-    }
-    const statusHandler = (ev, menuItem) => {
-        const { taskService, setting } = serviceContext;
-        let newTask = cloneDeep(task);
-        newTask.state = menuItem.key;
-        taskService.updateTaskState(task.settingItem, newTask)
-            .then(() => {
-                // update category for message
-                if (newTask.outlookMessage.ItemType == "message") {
-                    // update category for message
-                    return newTask.outlookMessage.setCategory(newTask.state, false)
-                } else
-                    return Promise.resolve();
-            })
-            .catch((error) => {
-                console.error("Update task state failed", error);
-            })
-            .finally(() => {
-                setTask(newTask);
-            });
+    // const dialogStateHandler = (ev, menuItem) => {
+    //     let newTask = cloneDeep(task);
+    //     newTask.state = menuItem.key;
+    //     setTask(newTask);
+    // }
+    // const statusHandler = (ev, menuItem) => {
+    //     const { taskService, setting } = serviceContext;
+    //     let newTask = cloneDeep(task);
+    //     newTask.state = menuItem.key;
+    //     taskService.updateTaskState(task.settingItem, newTask)
+    //         .then(() => {
+    //             // update category for message
+    //             if (newTask.outlookMessage.ItemType == "message") {
+    //                 // update category for message
+    //                 return newTask.outlookMessage.setCategory(newTask.state, false)
+    //             } else
+    //                 return Promise.resolve();
+    //         })
+    //         .catch((error) => {
+    //             console.error("Update task state failed", error);
+    //         })
+    //         .finally(() => {
+    //             setTask(newTask);
+    //         });
 
-    };
+    // };
     const btnContextMenuStyle = {
         height: 20,
         paddingLeft: 0

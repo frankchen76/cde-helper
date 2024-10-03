@@ -11,6 +11,8 @@ initializeIcons();
 let isOfficeInitialized = false;
 let currentOfficeTheme: Office.OfficeTheme;
 
+const currentUrl = new URL(window.location.href);
+const origin = currentUrl.searchParams.get("origin");
 
 const title = "Contoso Task Pane Add-in";
 
@@ -26,14 +28,18 @@ const render = () => {
     );
 };
 
-Office.onReady((info) => {
-    if (info.host === Office.HostType.Outlook) {
-        // document.getElementById("sideload-msg").style.display = "none";
-        // document.getElementById("app-body").style.display = "flex";
-        // document.getElementById("run").onclick = run;
-        render();
-    }
-});
+if (origin == "msteams") {
+    render();
+} else {
+    Office.onReady((info) => {
+        if (info.host === Office.HostType.Outlook) {
+            // document.getElementById("sideload-msg").style.display = "none";
+            // document.getElementById("app-body").style.display = "flex";
+            // document.getElementById("run").onclick = run;
+            render();
+        }
+    });
+}
 
 
 

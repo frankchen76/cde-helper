@@ -20,3 +20,5 @@ node_modules/
 lib/
 dist/
 env/.env.dev
+deployment/
+stats.json

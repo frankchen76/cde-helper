@@ -2,6 +2,69 @@ import { findIndex, forEach, indexOf, isArray } from 'lodash';
 import moment from "moment";
 import { Common } from './Common';
 import { DialogMessage, DialogMessagePopupEmail, DialogMessageUpdateCategory, MessageActionType } from './DialogMessage';
+import { error, info } from './log';
+import { jwtDecode } from "jwt-decode";
+
+
+class OwsTokenHelper {
+    private static owsCallbackToken = null;
+
+    private static async getCallbackTokenAsync(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
+                if (result.status == Office.AsyncResultStatus.Succeeded)
+                    resolve(result.value);
+                else {
+                    error(`Error in getCallbackTokenAsync`, result.error);
+                    reject(result.error);
+                }
+            });
+        });
+    }
+
+    public static async getOwsToken(): Promise<string> {
+        let ret = null;
+        try {
+            if (!OwsTokenHelper.owsCallbackToken) {
+                info(`Getting office callback token because of empty.`);
+                OwsTokenHelper.owsCallbackToken = await OwsTokenHelper.getCallbackTokenAsync();
+
+                //start a timer to refresh the token every 60 seconds
+                setInterval(async () => {
+                    try {
+                        const decodedToken = jwtDecode(OwsTokenHelper.owsCallbackToken);
+                        const tokenExpired = moment(new Date(decodedToken.exp * 1000));
+                        const now = moment();
+                        info(`Checking if Office callback token is expired. tokenExpired: ${tokenExpired}, now: ${now}, token: ${OwsTokenHelper.owsCallbackToken}`);
+                        //const tokenValid = tokenExpired > moment.utc();
+                        if (tokenExpired.isBefore(now)) {
+                            info(`Office callback token was expired, refresh it.`);
+                            OwsTokenHelper.owsCallbackToken = await OwsTokenHelper.getCallbackTokenAsync();
+                        } else {
+                            info(`Office callback token is still valid.`);
+                        }
+                    } catch (err) {
+                        error(`Error in token refresh timer-getOwsToken:`, err);
+                    }
+                }, 2700000); // refresh token by every 45 minutes
+            }
+
+            const decodedToken = jwtDecode(OwsTokenHelper.owsCallbackToken);
+            const tokenExpired = moment(new Date(decodedToken.exp * 1000));
+            const tokenValid = tokenExpired > moment();
+            info(`tokenExpired: ${tokenExpired}, tokenValid: ${tokenValid}`);
+            if (!tokenValid) {
+                info(`Getting office callback token because of expiration.`);
+                OwsTokenHelper.owsCallbackToken = await OwsTokenHelper.getCallbackTokenAsync();
+            }
+            ret = OwsTokenHelper.owsCallbackToken;
+        } catch (err) {
+            error("error in getOwsToken", err);
+        }
+        return ret;
+
+    }
+}
 
 export class OutlookItem {
     private _item: Office.Item & Office.ItemCompose & Office.ItemRead & Office.Message & Office.MessageCompose & Office.MessageRead & Office.Appointment & Office.AppointmentCompose & Office.AppointmentRead;
@@ -207,7 +270,8 @@ export class OutlookItemJSON {
     public toJson(): string {
         return JSON.stringify(this);
     }
-    public async setCategory(category: string, isDialog: boolean = false) {
+    public async setCategory(category: string, isDialog: boolean = false): Promise<string> {
+        let ret = "";
         try {
             if (isDialog) {
                 const dialogMessage = new DialogMessageUpdateCategory(MessageActionType.UpdateCategory, this, category);
@@ -215,21 +279,28 @@ export class OutlookItemJSON {
                 console.log(dialogMessage);
             } else {
                 // Check if master category includes those task's state category
+                info(`Starting to apply category.`);
+                const s = moment();
                 if (await this._isMasterCategoriesReady()) {
                     await this._applyCategory(category);
                 }
+                const e = moment();
+                info(`Updating category duration: ${e.diff(s, 'seconds')} seconds.`);
+                console.log(`Updating category duration: ${e.diff(s, 'seconds')} seconds.`);
             }
 
         } catch (error) {
-            console.log(error);
+            console.log("setCategory:", error);
+            ret = error.toString();
         }
+        return ret;
     }
     private async _applyCategory(category): Promise<void> {
-        return new Promise((resolve, reject) => {
-            //Office.context.mailbox.item.c
-            Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
+        return new Promise(async (resolve, reject) => {
+            const owsToken = await OwsTokenHelper.getOwsToken();
+            if (owsToken != null && owsToken != "") {
                 // var ewsId = Office.context.mailbox.item.itemId;
-                var token = result.value;
+                //var token = result.value;
                 var getMessageUrl = "";
                 if (this.ItemId.indexOf("@") != -1) {//$select=Id,Categories&
                     getMessageUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages?$filter=InternetMessageId eq '${this.ItemId}'`;
@@ -239,58 +310,58 @@ export class OutlookItemJSON {
 
                 //console.log(getMessageUrl);
                 //console.log(token);
+                //info(`_applyCategory-Updating category`);
 
-                fetch(getMessageUrl, {
+                const idResponse = await fetch(getMessageUrl, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${owsToken}`
                     }
-                })
-                    .then(response => response.json())
-                    .then(jsonObj => {
-                        const msgObj = isArray(jsonObj.value) ? jsonObj.value[0] : jsonObj.value;
-                        const itemId = msgObj["Id"];
-                        let existingCategories: string[] = [category];
-                        if (msgObj["Categories"]) {
-                            forEach(msgObj["Categories"], c => {
-                                const stateCategory = Common.CATEGORIES.find(ec => ec.toLowerCase() == c.toLowerCase())
-                                if (stateCategory == null) {
-                                    existingCategories.push(c);
-                                }
-                            });
-                        }
-                        const updateMessageUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${itemId}`;
-                        // console.log("updateMessageUrl", updateMessageUrl);
-                        // console.log("token:", token);
-                        return fetch(updateMessageUrl, {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({
-                                Categories: existingCategories
-                            })
-                        });
-                    })
-                    .then(response => {
-                        resolve();
-                    })
-                    .catch(error => {
-                        reject(error);
-                    });
-            });
+                });
+                const idResponseJsonObj = await idResponse.json();
 
+                const msgObj = isArray(idResponseJsonObj.value) ? idResponseJsonObj.value[0] : idResponseJsonObj.value;
+                const itemId = msgObj["Id"];
+                let existingCategories: string[] = [category];
+                if (msgObj["Categories"]) {
+                    forEach(msgObj["Categories"], c => {
+                        const stateCategory = Common.CATEGORIES.find(ec => ec.toLowerCase() == c.toLowerCase())
+                        if (stateCategory == null) {
+                            existingCategories.push(c);
+                        }
+                    });
+                }
+                //info(`_applyCategory-getting existing category`);
+
+                const updateMessageUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${itemId}`;
+                // console.log("updateMessageUrl", updateMessageUrl);
+                // console.log("token:", token);
+                await fetch(updateMessageUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${owsToken}`
+                    },
+                    body: JSON.stringify({
+                        Categories: existingCategories
+                    })
+                });
+                resolve();
+            } else {
+                reject("Token is empty");
+            }
         });
     }
     private async _isMasterCategoriesReady(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
+            //info(`Checking if master categories are ready.`);
             Office.context.mailbox.masterCategories.getAsync(result => {
                 if (result.status == Office.AsyncResultStatus.Succeeded && result.value) {
                     const existCategories = result.value.filter(item => {
                         return Common.CATEGORIES.find(c => c.toLowerCase() == item["displayName"].toLowerCase()) != null;
                     });
+                    //info(`master categories are ready.`);
                     resolve(existCategories && existCategories.length == 3);
                 } else {
                     resolve(false);
@@ -324,46 +395,21 @@ export class OutlookItemJSON {
         }
     }
     private async _displayEmail(internetMessageId: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            //Office.context.mailbox.item.c
-            Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-                // var ewsId = Office.context.mailbox.item.itemId;
-                var token = result.value;
-                // var restId = Office.context.mailbox.convertToRestId(ewsId, Office.MailboxEnums.RestVersion.v2_0);
+        return new Promise(async (resolve, reject) => {
+            var owsToken = await OwsTokenHelper.getOwsToken();
+            var getMessageUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages?$select=Id&$filter=InternetMessageId eq '${internetMessageId}'`;
 
-                //var getMessageUrl = Office.context.mailbox.restUrl + "/v2.0/me/messages/" + restId;
-                var getMessageUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages?$select=Id&$filter=InternetMessageId eq '${internetMessageId}'`;
-
-                // console.log(getMessageUrl);
-                // console.log(token);
-
-                fetch(getMessageUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                    .then(response => response.json())
-                    .then(jsonObj => {
-                        const itemId = jsonObj.value[0]["Id"];
-                        Office.context.mailbox.displayMessageForm(itemId);
-                        resolve();
-                    })
-                    .catch(error => {
-                        reject(error);
-                    });
-                // var xhr = new XMLHttpRequest();
-                // xhr.open("GET", getMessageUrl);
-                // xhr.setRequestHeader("Authorization", "Bearer " + token);
-                // xhr.onload = function (e) {
-                //     console.log(this.response);
-                //     var jsonobj = JSON.parse(this.response);
-                //     const itemId = jsonobj.value[0]["Id"];
-                //     Office.context.mailbox.displayMessageForm(itemId);
-                // };
-                // xhr.send();
+            const idResponse = await fetch(getMessageUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${owsToken}`
+                }
             });
+            const idResponseJsonObj = await idResponse.json();
+            const itemId = idResponseJsonObj.value[0]["Id"];
+            Office.context.mailbox.displayMessageForm(itemId);
+            resolve();
 
         });
     }

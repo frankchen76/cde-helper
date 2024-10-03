@@ -24,7 +24,7 @@ export class ClientSideAuthService {
         if (existToken && !existToken.IsAccessTokenValid) {
             //refresh token based on refresh_token if token expired
             try {
-                info(`Token expired, refresh token...`);
+                info(`Token expired, refresh token...`, existToken);
                 const refreshToken = await this.refreshAccessToken(existToken.refresh_token);
                 if (refreshToken) {
                     existToken = AuthServiceToken.createInstanceFromIToken(refreshToken);
@@ -60,7 +60,9 @@ export class ClientSideAuthService {
             let url = `${location.protocol}//${location.host}/web/auth-start.html?clientId=${ClientSideAuthService.CLIENT_ID}&tenantId=${ClientSideAuthService.TENANT_ID}&scope=${ClientSideAuthService.SCOPE}&loginHint=${loginHint}&stamp=${new Date().getTime()}`;
             //info(`open dialog ${url}`);
             let dialog;
-            Office.context.ui.displayDialogAsync(url, { height: 50, width: 50 }, (asyncResult: Office.AsyncResult<Office.Dialog>) => {
+            const w = 600 / screen.width * 100;
+            const h = 800 / screen.height * 100;
+            Office.context.ui.displayDialogAsync(url, { height: h, width: w }, (asyncResult: Office.AsyncResult<Office.Dialog>) => {
                 if (asyncResult.status.toString() == "failed") {
                     // In addition to general system errors, there are 3 specific errors for 
                     // displayDialogAsync that you can handle individually.
@@ -144,7 +146,7 @@ export class ClientSideAuthService {
     public async refreshAccessToken(refreshToken: string): Promise<IToken> {
         let url = `${location.protocol}//${location.host}/api/refreshtoken`;
         const tokenRequest: any = {
-            refreshToken
+            refreshToken: refreshToken
         };
         const tokenResponse = await fetch(url, {
             method: 'POST',
