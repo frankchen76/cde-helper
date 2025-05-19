@@ -1,7 +1,6 @@
 import * as _ from "lodash";
 import { IDropdownOption } from "@fluentui/react";
 import { ISettingAreaItem, ISettingItem } from "./SettingService";
-import { OutlookItem } from "./OutlookItem";
 
 export class Area {
     public get Id(): number { return this._id; }

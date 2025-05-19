@@ -79,7 +79,7 @@
                 {
                     "id": "addMessage",
                     "description": "Add current message to cde-helper",
-                    "title": "Add to cde-helper",
+                    "title": "Add to cde-helper${{APP_NAME_SUFFIX}}",
                     "type": "action",
                     "fetchTask": true,
                     "context": [
@@ -122,7 +122,7 @@
                 "capabilities": [
                     {
                         "name": "Mailbox",
-                        "minVersion": "1.5"
+                        "minVersion": "1.8"
                     }
                 ],
                 "scopes": [
@@ -135,7 +135,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.5"
+                                "minVersion": "1.8"
                             }
                         ],
                         "formFactors": [
@@ -162,7 +162,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.5"
+                                "minVersion": "1.8"
                             }
                         ]
                     },
@@ -187,7 +187,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.5"
+                                "minVersion": "1.8"
                             }
                         ]
                     },
@@ -214,7 +214,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.5"
+                                "minVersion": "1.8"
                             }
                         ],
                         "scopes": [
@@ -338,7 +338,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.5"
+                                "minVersion": "1.8"
                             }
                         ],
                         "scopes": [
@@ -462,7 +462,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.5"
+                                "minVersion": "1.8"
                             }
                         ],
                         "scopes": [

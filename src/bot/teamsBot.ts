@@ -106,13 +106,15 @@ export class TeamsBot extends TeamsActivityHandler {
     // }
 
     public async handleTeamsMessagingExtensionFetchTask(context: TurnContext, action: MessagingExtensionAction): Promise<MessagingExtensionActionResponse> {
-        console.log('return handleTeamsMessagingExtensionFetchTask');
+        console.log('return handleTeamsMessagingExtensionFetchTask', action);
         switch (action.commandId) {
             case 'addMessage':
-                return this.showAddMessageView();
+                return this.showAddMessageView(action);
         }
     }
-    private showAddMessageView(): MessagingExtensionActionResponse {
+    private showAddMessageView(action: MessagingExtensionAction): MessagingExtensionActionResponse {
+        const desc = `${action.messagePayload?.from?.user?.displayName} ${action.messagePayload?.body?.content}`;
+        const messageLink = `${encodeURIComponent(action.messagePayload?.linkToMessage)}`;
         return {
             task: {
                 type: 'continue',
@@ -120,7 +122,8 @@ export class TeamsBot extends TeamsActivityHandler {
                     title: 'Add a message',
                     height: 800,
                     width: 600,
-                    url: `${config.botEndpoint}/web/taskpane.html?origin=msteams#/taskitem/0/0`
+                    url: `${config.botEndpoint}/web/teampane.html?origin=msteams&desc=${desc}&mlink=${messageLink}#/taskitem/0/-2` // 0: defaultSettings, 1: teamtask
+                    //url: `${config.botEndpoint}/web/test.html`
                 }
             }
         };
@@ -145,7 +148,7 @@ export class TeamsBot extends TeamsActivityHandler {
             const authCode = JSON.parse(valueObj.state) as IAuthCode;
             //const authCode = valueObj.state as IAuthCode;
             // init access token for current user
-            await tokenProvider.initUserWithAuthCode(authCode);
+            await tokenProvider.initUserWithAuthCode(authCode, config.azureDevOpsProviderConfig.adoScopes);
         }
 
         // get user's token
@@ -227,11 +230,11 @@ export class TeamsBot extends TeamsActivityHandler {
     private async getSignInResponseForMessageExtension(config: IAzureDevOpsProviderConfig, devOpsUser: IUserToken, context: TurnContext): Promise<any> {
         console.log("getSignInResponseForMessageExtension");
         const teamMember = await Utils.getTeamAccount(context);
-        const scopesArray = this.getScopesArray(config.scopes);
+        const scopesArray = this.getScopesArray(config.adoScopes);
         info("teamMember", teamMember);
 
         //const signInLink = `${config.loginUrl}?scope=${encodeURI(scopesArray.join(" "))}&clientId=${config.clientId}&state=${devOpsUser.state}`;
-        const signInUrl = `${config.loginUrl}?clientId=${config.clientId}&tenantId=${config.tenantId}&scope=${config.scopes}&login_hint=${teamMember.userPrincipalName}&stamp=${new Date().getTime()}`;
+        const signInUrl = `${config.loginUrl}?clientId=${config.clientId}&tenantId=${config.tenantId}&scope=${config.adoScopes}&login_hint=${teamMember.userPrincipalName}&stamp=${new Date().getTime()}`;
 
         console.log('signInLink', signInUrl);
         return {

@@ -19,7 +19,8 @@ export interface IAzureDevOpsProviderConfig {
     projectUrl: string;
     loginUrl: string;
     redirectUrl: string;
-    scopes: string | string[];
+    adoScopes: string;
+    apiScopes: string;
 }
 export interface IAuthCode {
     state: string;
@@ -31,9 +32,9 @@ export interface ITokenStore {
 }
 
 export interface ITokenProvider {
-    getAccessToken(scopes?: string[]): Promise<string>;
+    getAccessToken(scopes: string): Promise<string>;
     getUserToken(): Promise<IUserToken>;
-    initUserWithAuthCode(authCode: IAuthCode): Promise<void>
+    initUserWithAuthCode(authCode: IAuthCode, scopes: string): Promise<void>
 }
 export interface IUserToken {
     upn: string;
@@ -123,12 +124,12 @@ export class AzureDevOpsTokenProvider implements ITokenProvider {
     public async getUserToken(): Promise<IUserToken> {
         return await this.tokenStore.getToken();
     }
-    public async getAccessToken(scopes?: string[]): Promise<string> {
+    public async getAccessToken(scopes: string): Promise<string> {
         if (!this.userToken) {
             throw new Error("userToken is not initialized");
         } else {
             if (!this.userToken.IsTokenValid) {
-                const iToken = await AzureDevOpsTokenProvider.refreshAccessToken(this.config, this.userToken.refreshToken);
+                const iToken = await AzureDevOpsTokenProvider.refreshAccessToken(this.config, this.userToken.refreshToken, scopes);
                 this.userToken.accessToken = iToken.access_token;
                 this.userToken.refreshToken = iToken.refresh_token;
             }
@@ -136,8 +137,8 @@ export class AzureDevOpsTokenProvider implements ITokenProvider {
             return this.userToken.accessToken;
         }
     }
-    public async initUserWithAuthCode(authCode: IAuthCode): Promise<void> {
-        const iToken = await AzureDevOpsTokenProvider.getAccessTokenByCode(this.config, authCode.code);
+    public async initUserWithAuthCode(authCode: IAuthCode, scopes: string): Promise<void> {
+        const iToken = await AzureDevOpsTokenProvider.getAccessTokenByCode(this.config, authCode.code, scopes);
         this.userToken.accessToken = iToken.access_token;
         this.userToken.refreshToken = iToken.refresh_token;
 
@@ -145,14 +146,15 @@ export class AzureDevOpsTokenProvider implements ITokenProvider {
         await this.tokenStore.saveToken(this.userToken);
     }
 
-    public static async getAccessTokenByCode(config: IAzureDevOpsProviderConfig, code: string): Promise<IToken> {
+    public static async getAccessTokenByCode(config: IAzureDevOpsProviderConfig, code: string, scopes: string): Promise<IToken> {
 
-        const { clientId, clientSecret, tenantId, scopes, redirectUrl } = config;
+        const { clientId, clientSecret, tenantId, redirectUrl } = config;
         const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
 
         const data = new URLSearchParams();
         data.append("client_id", clientId);
-        data.append("scope", scopes.toString());
+        //data.append("scope", scopes.toString());
+        data.append("scope", scopes);
         data.append("grant_type", "authorization_code"); //"refresh_token",
         data.append("code", code); //req.body.refreshToken,
         data.append("redirect_uri", redirectUrl);
@@ -181,17 +183,16 @@ export class AzureDevOpsTokenProvider implements ITokenProvider {
         }
 
     }
-    public static async refreshAccessToken(config: IAzureDevOpsProviderConfig, refreshToken: string): Promise<IToken> {
-        const { clientId, clientSecret, tenantId, scopes, redirectUrl } = config;
+    public static async refreshAccessToken(config: IAzureDevOpsProviderConfig, refreshToken: string, scopes: string): Promise<IToken> {
+        const { clientId, clientSecret, tenantId } = config;
 
         let url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
         const data = new URLSearchParams();
         data.append("client_id", clientId);
-        data.append("scope", scopes.toString());
-        //data.append("scope", "https://manage.office.com//.default");
+        data.append("scope", scopes);
         data.append("grant_type", "refresh_token"); //"refresh_token",
         data.append("refresh_token", refreshToken); //req.body.refreshToken,
-        data.append("client_secret", config.clientSecret);
+        data.append("client_secret", clientSecret);
         const options: AxiosRequestConfig = {
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         };

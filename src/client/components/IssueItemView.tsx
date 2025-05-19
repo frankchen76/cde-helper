@@ -1,13 +1,9 @@
-import {
-    DefaultButton,
-    IComboBoxOption,
-    IDropdownOption,
-    MessageBar,
-    MessageBarType,
-    PrimaryButton,
-    Shimmer,
-    Stack,
-} from "@fluentui/react";
+import { DefaultButton, PrimaryButton } from "@fluentui/react/lib/Button";
+import { IComboBoxOption } from "@fluentui/react/lib/ComboBox";
+import { MessageBar, MessageBarType } from "@fluentui/react/lib/MessageBar";
+import { Shimmer } from "@fluentui/react/lib/Shimmer";
+import { Stack } from "@fluentui/react/lib/Stack";
+
 import * as React from "react";
 import * as _ from "lodash";
 import { useParams, useHistory } from "react-router-dom";

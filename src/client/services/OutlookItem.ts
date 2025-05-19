@@ -7,7 +7,25 @@ import { jwtDecode } from "jwt-decode";
 
 
 class OwsTokenHelper {
-    private static owsCallbackToken = null;
+    private static OWSCALLBACKTOKEN = "OWSCALLBACKTOKEN";
+    private static get owsCallbackToken(): string {
+        let ret = localStorage.getItem(OwsTokenHelper.OWSCALLBACKTOKEN);
+        if (ret != null && ret != "") {
+            const decodedToken = jwtDecode(ret);
+            const tokenExpired = moment(new Date(decodedToken.exp * 1000));
+            const now = moment();
+            //info(`tokenExpired: ${tokenExpired}, tokenValid: ${tokenValid}`);
+            if (tokenExpired.isBefore(now)) {
+                info(`token expired. Token: ${tokenExpired}, now: ${now}`);
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+    private static set owsCallbackToken(token: string) {
+        localStorage.setItem(OwsTokenHelper.OWSCALLBACKTOKEN, token);
+    }
 
     private static async getCallbackTokenAsync(): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -25,45 +43,46 @@ class OwsTokenHelper {
     public static async getOwsToken(): Promise<string> {
         let ret = null;
         try {
-            if (!OwsTokenHelper.owsCallbackToken) {
+            ret = OwsTokenHelper.owsCallbackToken;
+            if (!ret) {
                 info(`Getting office callback token because of empty.`);
-                OwsTokenHelper.owsCallbackToken = await OwsTokenHelper.getCallbackTokenAsync();
+                ret = await OwsTokenHelper.getCallbackTokenAsync();
+                OwsTokenHelper.owsCallbackToken = ret;
 
                 //start a timer to refresh the token every 60 seconds
                 setInterval(async () => {
                     try {
-                        const decodedToken = jwtDecode(OwsTokenHelper.owsCallbackToken);
-                        const tokenExpired = moment(new Date(decodedToken.exp * 1000));
-                        const now = moment();
-                        info(`Checking if Office callback token is expired. tokenExpired: ${tokenExpired}, now: ${now}, token: ${OwsTokenHelper.owsCallbackToken}`);
-                        //const tokenValid = tokenExpired > moment.utc();
-                        if (tokenExpired.isBefore(now)) {
-                            info(`Office callback token was expired, refresh it.`);
-                            OwsTokenHelper.owsCallbackToken = await OwsTokenHelper.getCallbackTokenAsync();
-                        } else {
-                            info(`Office callback token is still valid.`);
+                        const existToken = OwsTokenHelper.owsCallbackToken;
+                        let needRefresh = true;
+                        if (existToken != null && existToken != "") {
+                            const decodedToken = jwtDecode(existToken);
+                            const tokenExpired = moment(new Date(decodedToken.exp * 1000));
+                            const now = moment();
+                            needRefresh = tokenExpired.isBefore(now);
+                            info(`token need to be refreshed: ${needRefresh}. tokenExpired: ${tokenExpired}, now: ${now}`);
                         }
+                        if (needRefresh) {
+                            OwsTokenHelper.owsCallbackToken = await OwsTokenHelper.getCallbackTokenAsync();
+                            info(`Office callback token was expired, refresh it.`);
+                        }
+
                     } catch (err) {
                         error(`Error in token refresh timer-getOwsToken:`, err);
                     }
                 }, 2700000); // refresh token by every 45 minutes
             }
-
-            const decodedToken = jwtDecode(OwsTokenHelper.owsCallbackToken);
-            const tokenExpired = moment(new Date(decodedToken.exp * 1000));
-            const tokenValid = tokenExpired > moment();
-            info(`tokenExpired: ${tokenExpired}, tokenValid: ${tokenValid}`);
-            if (!tokenValid) {
-                info(`Getting office callback token because of expiration.`);
-                OwsTokenHelper.owsCallbackToken = await OwsTokenHelper.getCallbackTokenAsync();
-            }
-            ret = OwsTokenHelper.owsCallbackToken;
         } catch (err) {
             error("error in getOwsToken", err);
         }
         return ret;
 
     }
+}
+export enum OutlookItemType {
+    Message = "message",
+    Appointment = "appointment",
+    Task = "task",
+    MSTeams = "msteams"
 }
 
 export class OutlookItem {
@@ -94,7 +113,7 @@ export class OutlookItem {
         return this.ItemId == item.ItemId;
     }
     public toOutlookItemJSON() {
-        return new OutlookItemJSON(this.ItemId, this.ItemType);
+        return new OutlookItemJSON(this.ItemId, this.ItemType as OutlookItemType);
     }
     public emailDomainExists(emailDomains: string[]): boolean {
         let ret = false;
@@ -220,6 +239,26 @@ export class OutlookItem {
             }
         });
     }
+    public async removeItemCategories(categories: string[]): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this._item.categories.removeAsync(categories, (result: Office.AsyncResult<void>) => {
+                if (result.status == Office.AsyncResultStatus.Succeeded) {
+                    resolve();
+                } else
+                    reject(result.error);
+            });
+        });
+    }
+    public async setItemCategories(categories: string[]): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this._item.categories.addAsync(categories, (result: Office.AsyncResult<void>) => {
+                if (result.status == Office.AsyncResultStatus.Succeeded) {
+                    resolve();
+                } else
+                    reject(result.error);
+            });
+        });
+    }
     private static _getItemFrom(item: Office.Item & Office.ItemCompose & Office.ItemRead & Office.Message & Office.MessageCompose & Office.MessageRead & Office.Appointment & Office.AppointmentCompose & Office.AppointmentRead): string {
         return item.from.emailAddress;
     }
@@ -261,16 +300,16 @@ export class OutlookItem {
 }
 export class OutlookItemJSON {
     public ItemId: string;
-    public ItemType: string;
+    public ItemType: OutlookItemType;
     //private _CATEGORIES = ["To Do", "Doing", "Done"];
-    constructor(itemId: string, itemType: string) {
+    constructor(itemId: string, itemType: OutlookItemType) {
         this.ItemId = itemId;
         this.ItemType = itemType;
     }
     public toJson(): string {
         return JSON.stringify(this);
     }
-    public async setCategory(category: string, isDialog: boolean = false): Promise<string> {
+    public async setCategory(category: string, outlookItem: OutlookItem, isDialog: boolean = false): Promise<string> {
         let ret = "";
         try {
             if (isDialog) {
@@ -282,7 +321,7 @@ export class OutlookItemJSON {
                 info(`Starting to apply category.`);
                 const s = moment();
                 if (await this._isMasterCategoriesReady()) {
-                    await this._applyCategory(category);
+                    await this._applyCategory(category, outlookItem);
                 }
                 const e = moment();
                 info(`Updating category duration: ${e.diff(s, 'seconds')} seconds.`);
@@ -295,7 +334,18 @@ export class OutlookItemJSON {
         }
         return ret;
     }
-    private async _applyCategory(category): Promise<void> {
+    private async _applyCategory(category: string, outlookItem: OutlookItem): Promise<void> {
+        if (this.ItemId == outlookItem.ItemId) {
+            // remove the existing categories
+            await outlookItem.removeItemCategories(Common.CATEGORIES);
+            // add the new category
+            await outlookItem.setItemCategories([category]);
+        } else {
+            info(`ItemId is not same. ItemId: ${this.ItemId}, outlookItem.ItemId: ${outlookItem.ItemId}`);
+        }
+
+    }
+    private async _applyCategory1(category): Promise<void> {
         return new Promise(async (resolve, reject) => {
             const owsToken = await OwsTokenHelper.getOwsToken();
             if (owsToken != null && owsToken != "") {
@@ -377,7 +427,7 @@ export class OutlookItemJSON {
             console.log(dialogMessage);
         } else {
             switch (this.ItemType) {
-                case "message":
+                case OutlookItemType.Message:
                     if (this.ItemId.indexOf("@") != -1) {
                         // display email based on the internetMessageId.
                         await this._displayEmail(this.ItemId);
@@ -386,7 +436,7 @@ export class OutlookItemJSON {
                         Office.context.mailbox.displayMessageForm(this.ItemId);
                     }
                     break;
-                case "appointment":
+                case OutlookItemType.Appointment:
                     Office.context.mailbox.displayAppointmentForm(this.ItemId);
                     break;
                 default:
@@ -418,7 +468,7 @@ export class OutlookItemJSON {
         let ret: OutlookItemJSON = OutlookItemJSON.createTaskInstance();
         if (json != null && json != "") {
             if (json.indexOf("{") == -1) {
-                ret = new OutlookItemJSON(json, "message");
+                ret = new OutlookItemJSON(json, OutlookItemType.Message);
             } else {
                 const temp = JSON.parse(json) as OutlookItemJSON;
                 ret = new OutlookItemJSON(temp.ItemId, temp.ItemType);
@@ -427,6 +477,9 @@ export class OutlookItemJSON {
         return ret;
     }
     public static createTaskInstance(): OutlookItemJSON {
-        return new OutlookItemJSON("", "task");
+        return new OutlookItemJSON("", OutlookItemType.Task);
+    }
+    public static createTeamsTaskInstance(messageId: string): OutlookItemJSON {
+        return new OutlookItemJSON(messageId, OutlookItemType.MSTeams);
     }
 }

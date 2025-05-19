@@ -1,40 +1,16 @@
 import * as React from "react";
 import { useState, useEffect, useContext } from "react";
-import {
-    getFocusStyle,
-    getTheme,
-    SelectionMode,
-    Stack,
-    IStackTokens,
-    IGroup,
-    IconButton,
-    IIconProps,
-    GroupedList,
-    mergeStyleSets,
-    Separator,
-    Link,
-    Spinner,
-    HoverCard,
-    IExpandingCardProps,
-    ExpandingCardMode,
-    ITooltipProps,
-    TooltipHost,
-    CommandBar,
-    ICommandBarItemProps,
-    DefaultButton,
-    IContextualMenuProps,
-    CommandButton
-} from "@fluentui/react";
+import { IGroup, GroupedList } from "@fluentui/react/lib/GroupedList";
+import { SelectionMode } from "@fluentui/react/lib/DetailsList";
+import { Spinner } from "@fluentui/react/lib/Spinner";
+
 import { RouteComponentProps } from "react-router-dom";
 import { ServiceContext } from "../services/SettingService";
-import { OutlookItem } from "../services/OutlookItem";
 import { Task, TaskCollection } from "../services/Task";
 // import { withAITracking } from '@microsoft/applicationinsights-react-js';
 // import { reactPlugin, appInsights } from '../services/AppInsights';
-import { TaskStateComponent } from "./TaskStateComponent";
-import { Common } from "../services/Common";
-import { cloneDeep } from "lodash";
 import { TasksRow } from "./TasksRow";
+import { OutlookItemType } from "../services/OutlookItem";
 
 export interface ITasksViewProps {
     routeProps: RouteComponentProps;
@@ -117,12 +93,10 @@ const TasksView = (props: ITasksViewProps) => {
     }
 
     const _onIconClickHandler = async (task: Task): Promise<void> => {
-        if (task.outlookMessage) {
+        if (task.outlookMessage && task.outlookMessage.ItemType == OutlookItemType.Message) {
             await task.outlookMessage.popupForm(isDialog);
         }
     }
-    const containerStackTokens: IStackTokens = { childrenGap: 5 };
-
     const _onRenderCell = (nestingDepth?: number, item?: Task, itemIndex?: number): React.ReactNode => {
         return item ? (
             <TasksRow task={item} itemIconClickHandler={_onIconClickHandler} />

@@ -6,7 +6,13 @@ import { useContext, useEffect, useState } from "react";
 import { Common, ExecutingResult } from "../services/Common";
 import { ServiceContext } from "../services/SettingService";
 import { ReportItemCollection, ReportItemGroup, ReportItemGroupCollection } from "../services/ReportItem";
-import { IconButton, MessageBar, MessageBarType, Shimmer, ShimmerElementType, Stack, Toggle } from "@fluentui/react";
+
+import { IconButton } from "@fluentui/react/lib/Button";
+import { MessageBar, MessageBarType } from "@fluentui/react/lib/MessageBar";
+import { Shimmer, ShimmerElementType } from "@fluentui/react/lib/Shimmer";
+import { Stack } from "@fluentui/react/lib/Stack";
+import { Toggle } from "@fluentui/react/lib/Toggle";
+
 
 export interface ITasksReportProps {
     routeProps: RouteComponentProps;

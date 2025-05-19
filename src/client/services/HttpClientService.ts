@@ -1,12 +1,16 @@
-import { ClientSideAuthService } from "./ClientSideAuthService";
+import { getAuthService, ScopesEnum } from "./ClientSideAuthService";
 
 interface IAuthHeader {
     getHeaders(isAdd: boolean): Promise<HeadersInit>;
 }
 export class BearerAuthHeader implements IAuthHeader {
-    private _authService = new ClientSideAuthService();
+    //private _authService = new ClientSideAuthService();
+    private _authService = getAuthService();
+    constructor(private scopes: ScopesEnum = ScopesEnum.AzureDevOps) {
+
+    }
     public async getHeaders(isAdd: boolean = false): Promise<HeadersInit> {
-        const token = await this._authService.getAccessToken();
+        const token = await this._authService.getAccessToken(this.scopes);
         return {
             'Content-Type': isAdd ? 'application/json-patch+json' : 'application/json',
             'Authorization': `Bearer ${token.access_token}`,
@@ -27,12 +31,10 @@ export class ApiKeyAuthHeader implements IAuthHeader {
 
 }
 export class HttpClientService {
-    private _authService = new ClientSideAuthService();
     constructor(private _authHeader: IAuthHeader = new BearerAuthHeader()) {
 
     }
     public async get(url: string): Promise<any> {
-        const token = await this._authService.getAccessToken();
         const header = await this._authHeader.getHeaders(false);
         const response = await fetch(url, {
             method: 'GET',
@@ -49,7 +51,6 @@ export class HttpClientService {
         return response.json();
     }
     public async post(url: string, body: any, isAdd?: boolean): Promise<any> {
-        const token = await this._authService.getAccessToken();
         const header = await this._authHeader.getHeaders(isAdd);
         const response = await fetch(url, {
             method: 'POST',
@@ -76,7 +77,6 @@ export class HttpClientService {
         // }).then(response => response.json());
     }
     public async patch(url: string, body: any, isAdd?: boolean): Promise<any> {
-        const token = await this._authService.getAccessToken();
         const header = await this._authHeader.getHeaders(isAdd);
         const response = await fetch(url, {
             method: 'PATCH',
@@ -103,7 +103,6 @@ export class HttpClientService {
         // }).then(response => response.json());
     }
     public async delete(url: string): Promise<any> {
-        const token = await this._authService.getAccessToken();
         const header = await this._authHeader.getHeaders(false);
 
         return fetch(url, {

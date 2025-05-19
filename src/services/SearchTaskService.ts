@@ -12,7 +12,7 @@ export interface ISearchTaskOptions {
 }
 export class SearchTaskService extends HttpClientService {
     constructor(provider: AzureDevOpsTokenProvider) {
-        super(provider);
+        super(provider, config.azureDevOpsProviderConfig.adoScopes);
     }
     public async getMe(): Promise<any> {
         const url = "https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.1-preview.3";

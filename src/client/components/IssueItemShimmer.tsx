@@ -1,6 +1,7 @@
-import { IStackTokens, Shimmer, ShimmerElementType, Stack } from "@fluentui/react";
+import { Shimmer, ShimmerElementType } from "@fluentui/react/lib/Shimmer";
+import { Stack } from "@fluentui/react/lib/Stack";
 import * as React from "react";
-import { Common } from "../../services/Common";
+import { Common } from "../services/Common";
 
 export const IssueItemShimmer = () => {
     const shimmerTitle = [

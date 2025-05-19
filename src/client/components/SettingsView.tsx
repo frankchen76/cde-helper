@@ -1,8 +1,12 @@
-import { cloneDeep } from "lodash";
-import { DefaultButton, Dropdown, IDropdownOption, IStackTokens, Label, MessageBar, MessageBarType, PrimaryButton, SelectableOptionMenuItemType, Shimmer, Stack, StackItem, TextField } from "@fluentui/react";
+import { DefaultButton, PrimaryButton } from "@fluentui/react/lib/Button";
+import { Dropdown, IDropdownOption } from "@fluentui/react/lib/Dropdown";
+import { MessageBar, MessageBarType } from "@fluentui/react/lib/MessageBar";
+import { Shimmer } from "@fluentui/react/lib/Shimmer";
+import { Stack } from "@fluentui/react/lib/Stack";
+import { TextField } from "@fluentui/react/lib/TextField";
+import { Toggle } from "@fluentui/react/lib/Toggle";
 import * as React from "react";
 import { RouteComponentProps } from "react-router-dom";
-import { QueryService } from "../services/QueryService";
 import { ISettingAreaItem, ISettingItem, ServiceContext } from "../services/SettingService";
 import { useEffect, useState } from "react";
 import { Common, ExecutingResult } from "../services/Common";
@@ -25,6 +29,7 @@ const SettingsView = (props: ISettingsViewProps) => {
     const { setting, queryService } = serviceContext;
     const [upn, setUpn] = useState<string>(setting.upn);
     const [apiKey, setApiKey] = useState<string>(setting.apiKey);
+    const [updateCategory, setUpdateCategory] = useState<boolean>(setting.updateCategory);
     const [executingResult, setExecutingResult] = useState<ExecutingResult>(ExecutingResult.createInstance());
 
     const [currentSettingItemId, setCurrentSettingItemId] = useState<string>(setting.defaultSettingId);
@@ -71,7 +76,6 @@ const SettingsView = (props: ISettingsViewProps) => {
             setExecutingResult(ExecutingResult.complete(true, "UPN was applied"));
         } catch (error) {
             console.log("update upn", error);
-            //setMessage(error);
             setExecutingResult(ExecutingResult.complete(true, Common.getErrorMessage(error), true));
         }
     };
@@ -86,11 +90,25 @@ const SettingsView = (props: ISettingsViewProps) => {
             serviceContext.onSettingUpdate(newSetting);
             setExecutingResult(ExecutingResult.complete(true, "ApiKey was applied"));
         } catch (error) {
-            console.log("update upn", error);
-            //setMessage(error);
+            console.log("update ApiKey", error);
             setExecutingResult(ExecutingResult.complete(true, Common.getErrorMessage(error), true));
         }
     };
+    const onUpdateCategory = async (event, checked) => {
+        setExecutingResult(ExecutingResult.start());
+        try {
+
+            let newSetting = _.cloneDeep(setting);
+            newSetting.updateCategory = updateCategory;
+            // Save the setting to localStorage
+            await newSetting.saveSetting()
+            serviceContext.onSettingUpdate(newSetting);
+            setExecutingResult(ExecutingResult.complete(true, "Update Category was applied"));
+        } catch (error) {
+            console.log("update updateCategory", error);
+            setExecutingResult(ExecutingResult.complete(true, Common.getErrorMessage(error), true));
+        }
+    }
     const onMessageBarDismiss = () => {
         setExecutingResult(result => ({ ...result, displayMessage: false }));
     };
@@ -129,6 +147,11 @@ const SettingsView = (props: ISettingsViewProps) => {
                             <PrimaryButton disabled={false} text="Apply" onClick={onApiKeyApplyHandler} />
                         </Stack.Item>
                     </Stack>
+                </div>
+            </div>
+            <div className="ms-Grid-row">
+                <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12" >
+                    <Toggle label="Update Category" onText="Yes" offText="No" inlineLabel onChange={onUpdateCategory} />
                 </div>
             </div>
             <div className="ms-Grid-row">

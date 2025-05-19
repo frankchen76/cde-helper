@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from "react";
 import {
     ICommandBarItemProps,
     CommandBar
-} from "@fluentui/react";
+} from "@fluentui/react/lib/CommandBar";
 import { ServiceContext } from "../services/SettingService";
 
 export interface IIssuesViewHeaderProps {

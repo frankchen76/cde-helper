@@ -6,7 +6,7 @@ This is application provided CDE search capabilities for the following applicati
 * MS Teams message extension
 * M365 Copilot plugins. 
 
-## side the project
+## sideload the project
 * run the following cmd to side the outlook add-ins. this will output a title_id which will be used to unload add-ins later
   ```bash
   npm run outlook:localstart
@@ -17,12 +17,15 @@ This is application provided CDE search capabilities for the following applicati
   ```
 * if for some reason, you mix the deployment with another add-ins development, you might need to run the below cmd to retrieve title_id and delete it separately: 
   ```bash
-  # login to M365 using Teamsfx CLI
+  # login to M365 using TeamsApps CLI as Teamsfx CLI is depreciated
   teamsfx login
+  teamsapp auth login m365
   # get title_id via using manifest-id which is same as "id" in manifest file or "TEAMS_APP_ID" in .env.local or .env.dev files. 
   teamsfx m365 launchinfo --manifest-id ab1c0b65-5df9-4df5-9721-2516daafc282
+  teamsapp launchinfo --manifest-id ab1c0b65-5df9-4df5-9721-2516daafc282
   # using the title_id get from previous cmd
   teamsfx m365 unacquire --title-id [title-id(usually start with "U_")]
+  teamsapp uninstall --title-id [title-id(usually start with "U_")]
   ```
 
 ## Customization from template: 
@@ -91,11 +94,28 @@ This is application provided CDE search capabilities for the following applicati
   ```
 * you need to run ngrok separately, otherwise, you need to update tasks.json to automatically run it. ```ngrok http 3978 --subdomain=ezcode```
 
+## Debug
+### enable debug string
+solution leverage ```debug``` NPM package. add ```debug``` in developer tools->Application->"Local storage"->cdehelper domain and
+```debug:cde-helper:*```
+
+### package tasks: 
+* "dev:teamsfx": start local instance. 
+
 ## Deployment
+
+### Manifest deployment
+the package is using M365 unified App schema. go to MS Teams to sideload the ./appPackage/build/appPackage.dev.zip. 
+
 ### Cosmos DB copy. 
 run 
 ```
 C:\Tools\dmt\windows-package\dmt.exe --settings settings-CompletedTasks.json
+```
+### Compile the code
+run the following cmd to compile the code
+```bash
+npm run build:prod
 ```
 
 ### Run from package deployment
@@ -103,7 +123,7 @@ MS Teams toolkit is using [Run your app in Azure App Service directly from a ZIP
 ```
 # generate zip file
 #./createzip.ps1
-# run 7zip to zip package.json, package-lock.json, dist and node_modules folders
+# run 7zip to zip package.json, package-lock.json, dist and node_modules folders. you might see DLP warning for a index.js file from node_modules folder. please allow them. 
 
 # run below command to make sure you are using right subscription
 az account show
@@ -188,6 +208,14 @@ Following documentation will help you to extend the template.
 - [Extend Microsoft 365 Copilot](https://aka.ms/teamsfx-copilot-plugin)
 
 ## change logs: 
+* 1.0.9: 
+  * rewrite the Settings code. Host Settings in CosmosDb and read it from API. 
+  * Add conditional for loading office.js which made tha application can be runn without office.js dependency. 
+  * Improve the performance of loading js: 
+    * enabled gzip in restify static files 
+    * enhanced moment.js via inclduing only En language
+    * enhanced all import statement to specific lib/controls
+    * enhanced lodash.js via lodash-webpack-plugin
 * 1.0.3: 
   * Moved to separate tenant for hosting
   * fixed office ows token retriving issues. introduced backend process to renew the token to avoid long time. 

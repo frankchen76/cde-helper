@@ -1,4 +1,5 @@
-import { ITag, Label, TagPicker } from "@fluentui/react";
+import { Label } from "@fluentui/react/lib/Label";
+import { ITag, TagPicker } from "@fluentui/react/lib/Pickers";
 import * as React from "react";
 import { useContext, useEffect, useState } from "react";
 import { ISettingItem, ServiceContext } from "../services/SettingService";

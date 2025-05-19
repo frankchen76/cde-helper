@@ -1,4 +1,5 @@
-import { IStackTokens, Shimmer, ShimmerElementsGroup, ShimmerElementType, Stack } from "@fluentui/react";
+import { Shimmer, ShimmerElementsGroup, ShimmerElementType } from "@fluentui/react/lib/Shimmer";
+import { Stack } from "@fluentui/react/lib/Stack";
 import * as React from "react";
 import { Common } from "../services/Common";
 

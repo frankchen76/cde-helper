@@ -7,7 +7,7 @@ export enum HttpClientAuthType {
     ApiKey = 'api-key'
 }
 export class HttpClientService {
-    constructor(private readonly tokenProvider: ITokenProvider, private scopes?: string[]) {
+    constructor(private readonly tokenProvider: ITokenProvider, private scopes: string) {
 
     }
 

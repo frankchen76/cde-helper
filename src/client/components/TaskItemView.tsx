@@ -1,12 +1,8 @@
-import {
-    DefaultButton,
-    IDropdownOption,
-    MessageBar,
-    MessageBarType,
-    PrimaryButton,
-    Shimmer,
-    Stack,
-} from "@fluentui/react";
+import { DefaultButton } from "@fluentui/react/lib/Button";
+import { MessageBar, MessageBarType } from "@fluentui/react/lib/MessageBar";
+import { Shimmer } from "@fluentui/react/lib/Shimmer";
+import { Stack } from "@fluentui/react/lib/Stack";
+
 import * as React from "react";
 import * as _ from "lodash";
 import { useParams, useHistory } from "react-router-dom";
@@ -15,7 +11,7 @@ import { Issue, IssueCollection } from "../services/Issue";
 import { Task } from "../services/Task";
 import { ISettingItem, ServiceContext } from "../services/SettingService";
 import { TagCollection } from "../services/Tag";
-import { OutlookItem, OutlookItemJSON } from "../services/OutlookItem";
+import { OutlookItem, OutlookItemJSON, OutlookItemType } from "../services/OutlookItem";
 import { Area, AreaCollection } from "../services/Area";
 // import { withAITracking } from '@microsoft/applicationinsights-react-js';
 // import { reactPlugin, appInsights } from '../services/AppInsights';
@@ -54,6 +50,8 @@ const TaskItemView = (props: ITaskItemViewProps) => {
 
     const currentUrl = new URL(window.location.href);
     const hostInfo = currentUrl.searchParams.get("_host_Info");
+    const q_desc = currentUrl.searchParams.get("desc");
+    const q_mlink = currentUrl.searchParams.get("mlink");
     const isDialog = hostInfo && hostInfo.indexOf("isDialog") != -1;
 
     const para = useParams();
@@ -124,6 +122,22 @@ const TaskItemView = (props: ITaskItemViewProps) => {
                         //task.dueDate = moment(new Date()).startOf('day').add(3, 'days').toDate()
                         task.dueDate = null;
                         break;
+                    case TaskFormModeEnum.CreateTeamTask:
+                        //init regular task
+                        task = new Task();
+                        task.id = 0;
+                        task.title = "";
+                        task.description = q_desc;
+                        task.state = StateEnum.ToDo;
+                        task.completedWork = 0;
+                        task.tags = undefined;
+                        task.areaId = undefined;
+                        task.area = undefined;
+                        task.issue = undefined;
+                        task.outlookMessage = OutlookItemJSON.createTeamsTaskInstance(q_mlink);
+                        //task.dueDate = moment(new Date()).startOf('day').add(3, 'days').toDate()
+                        task.dueDate = null;
+                        break;
                     case TaskFormModeEnum.UpdateTask:
                         task = await taskService.getTaskById(settingItem, id);
                         break;
@@ -176,9 +190,9 @@ const TaskItemView = (props: ITaskItemViewProps) => {
                     newTask.outlookMessage = task.outlookMessage;
 
                     let categoryResult = "";
-                    if (newTask.outlookMessage.ItemType == "message") {
+                    if (newTask.outlookMessage.ItemType == OutlookItemType.Message && newTask.outlookMessage.ItemId == props.outlookItem.ItemId) {
                         // update category for message
-                        categoryResult = await newTask.outlookMessage.setCategory(taskValue.state, isDialog);
+                        categoryResult = await newTask.outlookMessage.setCategory(taskValue.state, props.outlookItem, isDialog);
                     }
 
                     setPrevTask(_.cloneDeep(newTask));
@@ -271,6 +285,9 @@ const TaskItemView = (props: ITaskItemViewProps) => {
                 break;
             case TaskFormModeEnum.CreateTask:
                 ret = "Create Task";
+                break;
+            case TaskFormModeEnum.CreateTeamTask:
+                ret = "Create Team Task";
                 break;
             case TaskFormModeEnum.UpdateTask:
                 ret = "Update Task";
@@ -448,7 +465,7 @@ const TaskItemView = (props: ITaskItemViewProps) => {
                         <Stack horizontal horizontalAlign="space-around" style={{ marginTop: "10px" }}>
                             <SpinnerButton isRunning={executingResult.isRunning} text={formMode == TaskFormModeEnum.UpdateTask ? "Update" : "Add"} onClick={onAddHandler} />
                             {task && task.outlookMessage && formMode == TaskFormModeEnum.UpdateTask &&
-                                <DefaultButton disabled={executingResult.isRunning} text={task.outlookMessage.ItemType == "message" ? "View Email" : "View Event"} onClick={onViewEmailHandler} />
+                                <DefaultButton disabled={executingResult.isRunning} text={task.outlookMessage.ItemType == OutlookItemType.Message ? "View Email" : "View Event"} onClick={onViewEmailHandler} />
                             }
                             <DefaultButton disabled={executingResult.isRunning} text="Cancel" onClick={onCancelHandler} />
                         </Stack>

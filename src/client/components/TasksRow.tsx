@@ -1,33 +1,22 @@
 import * as React from "react";
 import { useState, useEffect, useContext } from "react";
+import { IContextualMenuProps } from "@fluentui/react/lib/ContextualMenu";
+import { DefaultButton, IconButton, CommandButton } from "@fluentui/react/lib/Button";
+import { Separator } from "@fluentui/react/lib/Separator";
+import { TooltipHost, ITooltipProps, ITooltipHostStyles } from "@fluentui/react/lib/Tooltip";
+import { Dialog, DialogType, DialogFooter } from "@fluentui/react/lib/Dialog";
+import { Link } from "@fluentui/react/lib/Link";
+import { IIconProps } from "@fluentui/react/lib/Icon";
+
 import {
     getFocusStyle,
     getTheme,
-    IconButton,
-    IIconProps,
-    mergeStyleSets,
-    Separator,
-    Link,
-    ITooltipProps,
-    TooltipHost,
-    IContextualMenuProps,
-    CommandButton,
-    ITooltipHostStyles,
-    Dialog,
-    DialogType,
-    Dropdown,
-    DialogFooter,
-    PrimaryButton,
-    DefaultButton,
-    TextField,
-    SpinButton,
-    Position,
-    CompoundButton,
-    Spinner
-} from "@fluentui/react";
+    mergeStyleSets
+} from "@fluentui/react/lib/Styling";
+
 import * as _ from "lodash";
 import { ServiceContext } from "../services/SettingService";
-import { OutlookItem } from "../services/OutlookItem";
+import { OutlookItem, OutlookItemType } from "../services/OutlookItem";
 import { Task } from "../services/Task";
 import { TaskStateComponent } from "./TaskStateComponent";
 import { Common } from "../services/Common";
@@ -59,13 +48,16 @@ export const TasksRow = (props: ITasksViewProps) => {
 
     let iconName = "";
     switch (task.outlookMessage.ItemType) {
-        case "task":
+        case OutlookItemType.Task:
             iconName = "TaskLogo";
             break;
-        case "message":
+        case OutlookItemType.Message:
             iconName = "Mail";
             break;
-        case "appointment":
+        case OutlookItemType.MSTeams:
+            iconName = "TeamsLogo";
+            break;
+        case OutlookItemType.Appointment:
             iconName = "Event";
             break;
     }
@@ -115,7 +107,7 @@ export const TasksRow = (props: ITasksViewProps) => {
         ),
     };
     const dialogHandler = async () => {
-        const { taskService, setting } = serviceContext;
+        const { taskService, setting, selectedOutlookItem } = serviceContext;
 
         handleSubmit(
             async (data) => {
@@ -127,10 +119,15 @@ export const TasksRow = (props: ITasksViewProps) => {
                     newTask.completedWork = data.completedHours;
 
                     await taskService.updateTask(setting.upn, task.settingItem, newTask, data.comments, prevTask);
-                    if (newTask.outlookMessage.ItemType == "message") {
-                        // update category for message
-                        await newTask.outlookMessage.setCategory(newTask.state, false)
+
+                    // update task category if the task is a message and the selected item is the same as the task
+                    if (newTask.outlookMessage.ItemType == OutlookItemType.Message && newTask.outlookMessage.ItemId == selectedOutlookItem?.ItemId) {
+                        await newTask.outlookMessage.setCategory(newTask.state, selectedOutlookItem, false);
                     }
+                    // if (newTask.outlookMessage.ItemType == "message" && setting.updateCategory) {
+                    //     // update category for message
+                    //     await newTask.outlookMessage.setCategory(newTask.state, false)
+                    // }
 
                     setPrevTask(newTask);
                     setTask(newTask);
@@ -321,7 +318,7 @@ export const TasksRow = (props: ITasksViewProps) => {
             </div>
             <div className="ms-Grid-row" style={{ fontSize: "11px" }}>
                 <div className="ms-Grid-col ms-sm2">
-                    <Link href={task.urlHtml} >{`${task.id}`}</Link>
+                    <Link href={task.urlHtml} target="_blank" >{`${task.id}`}</Link>
                 </div>
                 <div className="ms-Grid-col ms-sm4">
                     {Common.dateToDurationString(task.createdDate, task.id)}

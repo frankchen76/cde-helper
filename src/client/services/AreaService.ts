@@ -66,9 +66,9 @@ export class AreaService extends BaseService {
                 if (settingAreaItem.enabled) {
                     const existArea = areas.getAreaById(settingAreaItem.areaId);
                     // if outlookitem's to emails include the email domains. 
-                    if (outlookItem.areaExistInCategories(existArea.Name) ||
+                    if (outlookItem && (outlookItem.areaExistInCategories(existArea.Name) ||
                         outlookItem.areaExistInSubject(existArea.Name) ||
-                        (settingAreaItem.emailDomains && outlookItem.emailDomainExists(settingAreaItem.emailDomains))) {
+                        (settingAreaItem.emailDomains && outlookItem.emailDomainExists(settingAreaItem.emailDomains)))) {
 
                         ret = existArea;//areas.getAreaById(settingAreaItem.areaId);
                         break;

@@ -1,22 +1,14 @@
 import * as React from "react";
 import { useState, useEffect, useContext } from "react";
-import {
-    SelectionMode,
-    Stack,
-    IStackTokens,
-    IGroup,
-    GroupedList,
-    Spinner,
-    Dropdown,
-    IDropdownStyles,
-    IDropdownOption,
-    DatePicker,
-    List
-} from "@fluentui/react";
+import { Stack, IStackTokens } from "@fluentui/react/lib/Stack";
+import { Spinner } from "@fluentui/react/lib/Spinner";
+import { Dropdown, IDropdownStyles, IDropdownOption } from "@fluentui/react/lib/Dropdown";
+import { DatePicker } from "@fluentui/react/lib/DatePicker";
+import { List } from "@fluentui/react/lib/List";
+
 import moment from "moment";
-import { RouteComponentProps, useParams, useHistory } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import { ServiceContext } from "../services/SettingService";
-import { OutlookItem } from "../services/OutlookItem";
 import { Task, TaskCollection } from "../services/Task";
 import { TasksRow } from "./TasksRow";
 
@@ -34,7 +26,6 @@ const TasksViewByArea = (props: ITasksViewByAreaProps) => {
     const [selSettingItemId, setSelSettingItemId] = useState<string>(para["settingItemId"]);
     const [selAreaId, setSelAreaId] = useState<number>(+para["areaId"]);
     const [tasks, setTasks] = useState<TaskCollection>();
-    const [groups, setGroups] = useState<IGroup[]>();
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
     const [isDialog, setIsDialog] = useState<boolean>(hostInfo && hostInfo.indexOf("isDialog") != -1);

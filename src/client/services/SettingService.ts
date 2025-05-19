@@ -12,6 +12,8 @@ import { HostInfo } from "./HostInfo";
 import { OutlookItem } from "./OutlookItem";
 import { info } from "./log";
 import { err } from "../../services/log";
+import { BearerAuthHeader, HttpClientService } from "./HttpClientService";
+import { ScopesEnum } from "./ClientSideAuthService";
 
 export interface ISettingItem {
     id: string;
@@ -37,7 +39,8 @@ export class Setting {
     constructor(public items: ISettingItem[],
         public upn: string,
         public defaultSettingId: string,
-        public apiKey: string = "") {
+        public apiKey: string = "",
+        public updateCategory: boolean = false) {
 
     }
     public get DefaultSettingItem(): ISettingItem {
@@ -45,6 +48,11 @@ export class Setting {
         return this.items && Array.isArray(this.items) ? this.items.find(s => s.id == this.defaultSettingId) : null;
     }
     public static async getSetting(): Promise<Setting> {
+        const settingsService = new SettingsService();
+        let ret: Setting = await settingsService.getSetting() as Setting;
+        return ret;
+    }
+    public static async getSetting1(): Promise<Setting> {
         let localSetting: Setting = Office.context.roamingSettings.get(Setting.SETTING_NAME) as Setting;
         // TODO: force to load from web
         //localSetting = null;
@@ -52,7 +60,7 @@ export class Setting {
         info("getSetting-localSetting", localSetting);
         if (localSetting) {
             // read from local if available
-            ret = new Setting(localSetting.items, localSetting.upn, localSetting.defaultSettingId, localSetting.apiKey);
+            ret = new Setting(localSetting.items, localSetting.upn, localSetting.defaultSettingId, localSetting.apiKey, localSetting.updateCategory);
         } else {
             // load from express.js
             // get current UPN
@@ -137,6 +145,39 @@ export interface IServiceContext {
 };
 export const ServiceContext = createContext<IServiceContext>(null);
 
+export class SettingsService {
+    protected _httpClientService: HttpClientService;
+    constructor() {
+        this._httpClientService = new HttpClientService(new BearerAuthHeader(ScopesEnum.CustomApi));
+    }
+
+    public async getSetting(): Promise<Setting> {
+        let ret: Setting = null;
+        try {
+            const url = `${location.protocol}//${location.host}/api/settings`;
+            const result = await this._httpClientService.get(url);
+
+            ret = new Setting(result.items, result.upn, result.defaultSettingId, result.apiKey, false);
+
+        } catch (error) {
+            err("logReportItemsToDb", error);
+            throw error;
+        }
+        return ret;
+    }
+    public async saveSetting(setting: Setting): Promise<void> {
+        let ret: Setting = null;
+        try {
+            const url = `${location.protocol}//${location.host}/api/settings`;
+            const result = await this._httpClientService.post(url, setting);
+
+        } catch (error) {
+            err("logReportItemsToDb", error);
+            ret = error.toString();
+        }
+    }
+
+}
 
 // export class SettingService {
 //     private _setting: ISetting;

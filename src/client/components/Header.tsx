@@ -1,4 +1,4 @@
-import { CommandBar, ICommandBarItemProps } from "@fluentui/react";
+import { CommandBar, ICommandBarItemProps } from "@fluentui/react/lib/CommandBar";
 import * as React from "react";
 import { useContext, useEffect, useState } from "react";
 import { ServiceContext } from "../services/SettingService";

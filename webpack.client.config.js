@@ -26,7 +26,10 @@ const config = [
             vendor: [
                 'react',
                 'react-dom',
-                '@fluentui/react'
+                '@fluentui/react',
+                '@azure/msal-browser',
+                '@azure/msal-react',
+                'moment'
             ],
             taskpane: {
                 import: [path.join(__dirname, "/src/client/taskpane/index.tsx")],

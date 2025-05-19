@@ -1,34 +1,20 @@
 import * as React from "react";
 import { useState, useEffect, useContext } from "react";
-import {
-    getFocusStyle,
-    getTheme,
-    SelectionMode,
-    Stack,
-    IStackTokens,
-    IGroup,
-    IconButton,
-    IIconProps,
-    GroupedList,
-    mergeStyleSets,
-    Separator,
-    Link,
-    Spinner,
-    ICommandBarItemProps
-} from "@fluentui/react";
+import { getTheme } from "@fluentui/react/lib/Styling";
+import { Stack, IStackTokens } from "@fluentui/react/lib/Stack";
+import { GroupedList, IGroup } from "@fluentui/react/lib/GroupedList";
+import { Spinner } from "@fluentui/react/lib/Spinner";
+import { SelectionMode } from "@fluentui/react/lib/Selection";
+
 import { RouteComponentProps } from "react-router-dom";
 import { ServiceContext } from "../services/SettingService";
-import { find } from "lodash";
 import { OutlookItem } from "../services/OutlookItem";
-import { Task, TaskCollection } from "../services/Task";
+import { Task } from "../services/Task";
 // import { withAITracking } from '@microsoft/applicationinsights-react-js';
 // import { reactPlugin, appInsights } from '../services/AppInsights';
-import { TaskStateComponent } from "./TaskStateComponent";
-import { TasksViewHeader } from "./TasksViewHeader";
 import { Issue, IssueCollection } from "../services/Issue";
 import { IssuesViewHeader } from "./IssuesViewHeader";
-import * as _ from "lodash";
-import { Common } from "../services/Common";
+import cloneDeep = require("lodash/cloneDeep")
 import { IssuesRow } from "./IssuesRow";
 
 export interface IIssuesViewProps {
@@ -65,7 +51,7 @@ const IssuesView = (props: IIssuesViewProps) => {
 
                 if (result) {
                     if (allIssues == null) {
-                        allIssues = _.cloneDeep(result);
+                        allIssues = cloneDeep(result);
                     } else {
                         //allIssues.items = allIssues.items.concat(result.items);
                         allIssues.appendIssues(result);
@@ -115,29 +101,7 @@ const IssuesView = (props: IIssuesViewProps) => {
 
     const containerStackTokens: IStackTokens = { childrenGap: 5 };
 
-    const classNames = mergeStyleSets({
-        itemCell: [
-            getFocusStyle(getTheme(), { inset: -1 }),
-            {
-                // minHeight: 54,
-                // padding: 10,
-                // boxSizing: 'border-box',
-                // borderBottom: `1px solid ${getTheme().semanticColors.bodyDivider}`,
-                // display: 'flex',
-                selectors: {
-                    '&:hover': { background: getTheme().palette.neutralLight },
-                },
-            }
-        ],
-        selectedRow: {
-            backgroundColor: theme.palette.themeLighterAlt
-        }
-    });
     const _onRenderCell = (nestingDepth?: number, item?: Issue, itemIndex?: number): React.ReactNode => {
-        const iconProps: IIconProps = {
-            iconName: "IssueTracking",
-            style: { fontSize: 15 }
-        };
         return item ? (
             <IssuesRow issue={item} />
         ) : null;

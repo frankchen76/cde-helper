@@ -13,7 +13,8 @@ import {
 
 import { IServiceContext, ServiceContext, Setting } from "../services/SettingService";
 import { IPackageInfo } from "../services/IPackageInfo";
-import { IconButton, Spinner, SpinnerSize, Stack, TextField } from "@fluentui/react";
+import { Spinner } from "@fluentui/react/lib/Spinner";
+import { Stack } from "@fluentui/react/lib/Stack";
 import { IssueService } from "../services/IssueService";
 // import { withAITracking } from '@microsoft/applicationinsights-react-js';
 // import { reactPlugin, appInsights } from '../services/AppInsights';
@@ -28,24 +29,27 @@ import { TagService } from "../services/TagService";
 import { ReportService } from "../services/ReportService";
 import { OutlookItem } from "../services/OutlookItem";
 import TasksViewByArea from "./TasksViewByArea";
-import { HostInfo, OriginType } from "../services/HostInfo";
+import { HostInfo } from "../services/HostInfo";
+import { set } from "lodash";
 
 export interface AppProps {
     title: string;
-    isOfficeInitialized: boolean;
+    hostInfo: HostInfo;
+    //isOfficeInitialized?: boolean;
 }
 
 const App = (props: AppProps) => {
-    const [currentMailItem, setCurrentMailItem] =
-        useState<Office.Item
-            & Office.ItemCompose
-            & Office.ItemRead
-            & Office.Message
-            & Office.MessageCompose
-            & Office.MessageRead
-            & Office.Appointment
-            & Office.AppointmentCompose
-            & Office.AppointmentRead>(Office.context?.mailbox?.item);
+    const [isOfficeInitialized, setIsOfficeInitialized] = useState<boolean>(false);
+    // const [currentMailItem, setCurrentMailItem] =
+    //     useState<Office.Item
+    //         & Office.ItemCompose
+    //         & Office.ItemRead
+    //         & Office.Message
+    //         & Office.MessageCompose
+    //         & Office.MessageRead
+    //         & Office.Appointment
+    //         & Office.AppointmentCompose
+    //         & Office.AppointmentRead>(Office.context?.mailbox?.item);
     //const [settingService, setSettingService] = useState<SettingService>();
     const [serviceContext, setServiceContext] = useState<IServiceContext>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -56,14 +60,27 @@ const App = (props: AppProps) => {
     // const currentUrl = new URL(window.location.href);
     // const hostInfo = currentUrl.searchParams.get("_host_Info");
     // const [isDialog, setIsDialog] = useState<boolean>(hostInfo && hostInfo.indexOf("isDialog") != -1);
-    const hostInfo = new HostInfo();
 
-    const { title, isOfficeInitialized } = props;
     const containerStyle = {
         maxWidth: "800px",
         margin: "auto"
     };
     const packageInfo: IPackageInfo = require("../../../package.json");
+
+    // load Office js
+    useEffect(() => {
+        console.log("start to load Office.js...");
+        (async () => {
+            if (props.hostInfo.IsOutlookTaskPane) {
+                await Office.onReady();
+                // if (!Office.context.requirements.isSetSupported('ExcelApi', '1.7')) {
+                //     console.log("Sorry, this add-in only works with newer versions of Excel.");
+                // }
+                console.log("Office.js is ready");
+            }
+            setIsOfficeInitialized(true);
+        })();
+    }, []);
 
     // Load SettingService2
     useEffect(() => {
@@ -74,7 +91,7 @@ const App = (props: AppProps) => {
             const issueService = new IssueService();
             taskService._issueService = issueService;
             let selectedOutlookItem: OutlookItem = null;
-            if (Office.context?.mailbox?.item) {
+            if (props.hostInfo.IsOutlookTaskPane && Office.context?.mailbox?.item) {
                 selectedOutlookItem = await OutlookItem.createInstance(Office.context.mailbox.item);
                 setOutlookItem(selectedOutlookItem);
             }
@@ -86,7 +103,7 @@ const App = (props: AppProps) => {
                 tagService: new TagService(),
                 reportService: new ReportService(),
                 setting: setting,
-                hostInfo: hostInfo,
+                hostInfo: props.hostInfo,
                 selectedOutlookItem: selectedOutlookItem,
                 onSettingUpdate: onSettingUpdate
             };
@@ -95,35 +112,41 @@ const App = (props: AppProps) => {
             setServiceContext(context);
             setIsLoading(false);
         };
-
-        loadSettingService();
-    }, []);
+        if (isOfficeInitialized) {
+            loadSettingService();
+        }
+    }, [isOfficeInitialized]);
 
     // Load mainitem
     useEffect(() => {
-        // add handler if it's not in dialog
-        if (hostInfo.Origin != OriginType.OutlookDialog) {
-            Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, (): void => {
-                if (Office.context.mailbox.item) {
-                    OutlookItem.createInstance(Office.context.mailbox.item).then(newItem => {
-                        if (newItem) {
-                            setOutlookItem(newItem);
-                            // update service context to include the latestest outlook item
-                            setServiceContext(context => ({ ...context, selectedOutlookItem: newItem }));
-                        }
-                    });
-                }
-            });
+        if (isOfficeInitialized) {
+            // add handler if it's not in dialog
+            if (props.hostInfo.IsOutlookTaskPane) {
+                Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, (): void => {
+                    if (Office.context.mailbox.item) {
+                        OutlookItem.createInstance(Office.context.mailbox.item).then(newItem => {
+                            if (newItem) {
+                                setOutlookItem(newItem);
+                                // update service context to include the latestest outlook item
+                                setServiceContext(context => ({ ...context, selectedOutlookItem: newItem }));
+                            }
+                        });
+                    }
+                });
+            }
         }
-    }, []);
+    }, [isOfficeInitialized]);
 
     const onSettingUpdate = (val: Setting) => {
         setServiceContext(context => ({ ...context, setting: val }));
     };
 
     // Rendering NOTE: dir="ltr" is required
-    if (isLoading) {
-        return (<Spinner title="Loading add-in..." />);
+    if (isOfficeInitialized === false) {
+        return (<Spinner label="Loading office.js..." />);
+    }
+    else if (isLoading) {
+        return (<Spinner label="Loading add-in..." />);
     } else {
         return (<HashRouter>
             <div className="ms-Grid" style={containerStyle} dir="ltr">

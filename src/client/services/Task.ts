@@ -1,7 +1,7 @@
 import { find } from "lodash";
 import { IGroup } from "@fluentui/react";
 import { Issue } from "./Issue";
-import { OutlookItem, OutlookItemJSON } from "./OutlookItem";
+import { OutlookItemJSON } from "./OutlookItem";
 import { ISettingItem } from "./SettingService";
 import * as _ from "lodash";
 

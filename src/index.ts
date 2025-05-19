@@ -24,6 +24,8 @@ import { ServerSideAuthService } from "./services/auth/ServerSideAuthService";
 import { authenticateApiKey, authenticateBearKey } from "./services/auth/APIKeyAuth";
 import { CompletedTasksDbSerivce } from "./services/db/CompletedTasksDbSerivce";
 import _ from "lodash";
+import { SettingsDbSerivce } from "./services/db/SettingsDbSerivce";
+import { ConfidentialClientApplication } from "@azure/msal-node"
 
 
 // Create adapter.
@@ -84,6 +86,8 @@ info("NODE_ENV: " + env);
 // Create HTTP server.
 const server = restify.createServer();
 server.use(restify.plugins.bodyParser());
+server.use(restify.plugins.gzipResponse());
+
 server.listen(process.env.port || process.env.PORT || 3978, () => {
     info(`\nBot Started, ${server.name} listening to ${server.url}`);
 });
@@ -118,12 +122,57 @@ server.get('/api/getSettings/:upn', async (req, res) => {
     });
     res.send(200, ret);
 });
+
+// add the authenticateApiKey middleware to the router
+var passport = require('passport');
+var OIDCBearerStrategy = require('passport-azure-ad').BearerStrategy;
+server.use(passport.initialize()); // Starts passport
+//server.use(passport.session()); // Provides session support
+
+var bearerStrategy = new OIDCBearerStrategy(config.entraIdAppConfig, // config file
+    // function (req, token, done) {
+    //     console.log('token was the token retreived');
+    //     return done(null, token);
+    // }
+
+    // passRequireCallback is set to true, so we can get the request object in the callback, otherwise you can use token and done only
+    function (req, token, done) {
+        //console.log(token, 'was the token retreived');
+        info(token, 'was the token retreived');
+        if (!token.email) {
+            done(new Error('upn is not found in token'));
+        }
+        else {
+            req.query.upn = token.email;
+            info('creator was set to upn:', token.email);
+            done(null, token);
+        }
+    }
+);
+
+passport.use(bearerStrategy);
+server.get('/api/settings', passport.authenticate('oauth-bearer', { session: false }), async (req, res) => {
+    const settingsService = new SettingsDbSerivce();
+    try {
+        info("upn:", req.query.upn);
+        const result = await settingsService.getSettings(req.query.upn);
+        info("Get settings:", result);
+        res.send(200, result);
+    } catch (err) {
+        console.error(err);
+        res.send(500, {
+            error: err
+        });
+    }
+});
+
+// req.body = { "code": "code", "scopes": "scopes" }
 server.post('/api/refreshtoken', async (req, res) => {
     const authService = new ServerSideAuthService(config.azureDevOpsProviderConfig);
     let token;
     let errorMessage = "";
     try {
-        token = await authService.refreshToken(req.body.refreshToken);
+        token = await authService.refreshToken(req.body.refreshToken, req.body.scopes);
         res.send(200, token);
     } catch (error) {
         err(error);
@@ -137,9 +186,9 @@ server.post('/api/gettokenbyauthcode', async (req, res) => {
     let token;
     let errorMessage = "";
     try {
-        info(`gettokenbyauthcode authcode: ${req.body.code}; host: ${req.header('Host')}`);
-        token = await authService.getTokenByCode(req.body.code);
-        info(`gettokenbyauthcode-token: ${token}`);
+        info(`gettokenbyauthcode authcode: ${req.body.code}; host: ${req.header('Host')}; scopes: ${req.body.scopes}`);
+        token = await authService.getTokenByCode(req.body.code, req.body.scopes);
+        info(`gettokenbyauthcode-token:`, token);
         res.send(200, token);
     } catch (err) {
         err("/api/gettokenbyauthcode", err);
@@ -167,11 +216,18 @@ server.post('/api/TaskReport', authenticateBearKey, async (req: Request, res: Re
     }
 });
 
+// server.get('/web/*.js', (req, res, next) => {
+//     req.url = req.url + '.br';
+//     res.set('Content-Encoding', 'br');
+//     res.set('Content-Type', 'application/javascript; charset=UTF-8');
+//     next();
+// });
 server.get(
     //"/auth-:name(start|end|config).html",
     "/web/*",
     restify.plugins.serveStatic({
         //directory: path.join(__dirname, "public"),
         directory: path.join(__dirname),
+        gzip: true,
     })
 );

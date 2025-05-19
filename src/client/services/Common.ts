@@ -4,6 +4,7 @@ import moment from "moment";
 export enum TaskFormModeEnum {
     CreateTask,
     CreateEmailTask,
+    CreateTeamTask,
     UpdateTask
 };
 export enum IssueFormModeEnum {
@@ -36,6 +37,9 @@ export class Common {
                 break;
             case 0:
                 ret = TaskFormModeEnum.CreateEmailTask;
+                break;
+            case -2:
+                ret = TaskFormModeEnum.CreateTeamTask;
                 break;
             default:
                 ret = TaskFormModeEnum.UpdateTask;

@@ -1,35 +1,61 @@
+import { authentication, app } from "@microsoft/teams-js";
 import { IToken } from "../../services/auth/IToken";
 import { IAuthCode } from "../../services/auth/IAuthCode";
-import { ICallbackModel } from "../../services/auth/ICallbackModel";
-import { AuthServiceToken, CallbackToken } from "./AuthServiceToken";
+import { AuthServiceToken, AuthServiceTokenCache } from "./AuthServiceToken";
 import { error, info } from "./log";
-import { v4 as uuidv4 } from 'uuid';
+import { HostInfo, OriginType } from "./HostInfo";
+import { msalInstance } from "../taskpane";
+import _ from "lodash";
 
 
-export class ClientSideAuthService {
-    private static CACHE_TOKEN = "cde-helper-token";
-    //private static _token: IToken = null; 
-    private static TENANT_ID = "6f423eb7-7932-4e19-ae14-fa375038681b";
-    private static CLIENT_ID = "d5be9481-3999-4101-b0a2-99834cf4c1ad";
-    private static SCOPE = "https://app.vssps.visualstudio.com/.default";
+export enum ScopesEnum {
+    AzureDevOps = "https://app.vssps.visualstudio.com/.default offline_access",
+    CustomApi = "api://e46dac3e-acfb-48a2-a65e-8874c0b98ee3/.default offline_access",
+};
 
-    public async getAccessToken(): Promise<IToken> {
-        //const existTokenJson = null;
-        const existTokenJson = localStorage.getItem(ClientSideAuthService.CACHE_TOKEN);
-        let existToken: AuthServiceToken = null;
-        if (existTokenJson) {
-            existToken = AuthServiceToken.createInstanceFromJSON(existTokenJson);
+var _IAuthService: IAuthService = null;
+export const getAuthService = () => {
+    const hostInfo = HostInfo.getHostInfo();
+    if (_IAuthService == null) {
+        // check if we are in Outlook taskpane or web app
+        switch (hostInfo.Origin) {
+            case OriginType.OutlookTaskPane:
+                _IAuthService = new OutlookAuthService();
+                break;
+            case OriginType.MSTeams:
+                _IAuthService = new MSTeamsAuthService();
+                break;
+            default:
+                _IAuthService = new MsalAuthService();
+                break;
         }
+    }
+    return _IAuthService;
+}
+
+export interface IAuthService {
+    getAccessToken(scopes: ScopesEnum): Promise<IToken>;
+}
+
+export abstract class ClientSideAuthServiceBase implements IAuthService {
+    protected static TENANT_ID = "6f423eb7-7932-4e19-ae14-fa375038681b";
+    protected static CLIENT_ID = "d5be9481-3999-4101-b0a2-99834cf4c1ad";
+
+    protected abstract getIToken(scopes: ScopesEnum): Promise<IToken>;
+    public async getAccessToken(scopes: ScopesEnum): Promise<IToken> {
+        let tokenCache = AuthServiceTokenCache.createInstanceFromCache();
+        let existToken: AuthServiceToken = tokenCache.getToken(scopes);
 
         if (existToken && !existToken.IsAccessTokenValid) {
             //refresh token based on refresh_token if token expired
             try {
                 info(`Token expired, refresh token...`, existToken);
-                const refreshToken = await this.refreshAccessToken(existToken.refresh_token);
-                if (refreshToken) {
-                    existToken = AuthServiceToken.createInstanceFromIToken(refreshToken);
+                const newToken = await this.refreshIToken(existToken.refresh_token, scopes);
+                if (newToken) {
+                    existToken = AuthServiceToken.createInstanceFromIToken(newToken, scopes);
                     // save refreshed token
-                    localStorage.setItem(ClientSideAuthService.CACHE_TOKEN, existToken.toJson());
+                    tokenCache.addToken(existToken);
+                    tokenCache.saveTokenCache();
                     info(`Saved refreshed token.`);
                 } else {
                     existToken = null;
@@ -43,21 +69,117 @@ export class ClientSideAuthService {
             info(`Reuse existed token.`);
         }
 
+        // kickoff authentication if token not exist or expired
         if (existToken == null) {
             info(`Retrieve token based on prompt.`);
-            existToken = AuthServiceToken.createInstanceFromIToken(await this.getIToken());
-            localStorage.setItem(ClientSideAuthService.CACHE_TOKEN, existToken.toJson());
-
+            const newToken = await this.getIToken(scopes);
+            existToken = AuthServiceToken.createInstanceFromIToken(newToken, scopes);
+            tokenCache.addToken(existToken);
+            tokenCache.saveTokenCache();
+            info(`Saved new token.`);
         }
         info(existToken);
         return existToken;
     }
+    protected async getAccessTokenByCode(authCode: IAuthCode, scopes: ScopesEnum = ScopesEnum.AzureDevOps): Promise<IToken> {
+        let url = `${location.protocol}//${location.host}/api/gettokenbyauthcode`;
+        const tokenRequest: any = {
+            code: authCode.code,
+            state: authCode.state,
+            scopes: scopes
+        };
+        const tokenResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'cache': "no-store"
+            },
+            body: JSON.stringify(tokenRequest)
+        });
+        if (!tokenResponse.ok) {
+            throw await tokenResponse.text();
+        }
+        return tokenResponse.json();
 
-    public getIToken(): Promise<IToken> {
+    }
+    protected async refreshIToken(refreshToken: string, scopes: ScopesEnum = ScopesEnum.AzureDevOps): Promise<IToken> {
+        let url = `${location.protocol}//${location.host}/api/refreshtoken`;
+        const tokenRequest: any = {
+            refreshToken: refreshToken,
+            scopes: scopes
+        };
+        const tokenResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'cache': "no-store"
+            },
+            body: JSON.stringify(tokenRequest)
+        });
+        if (!tokenResponse.ok) {
+            throw await tokenResponse.text();
+        }
+        return tokenResponse.json();
+    }
+}
+
+export class MsalAuthService extends ClientSideAuthServiceBase {
+
+    public async getIToken(scopes: ScopesEnum = ScopesEnum.AzureDevOps): Promise<IToken> {
+        let ret: IToken = null;
+        //const { instance, accounts, inProgress } = useMsal();
+        const request = {
+            scopes: scopes.split(" "),
+        }
+        const result = await msalInstance.acquireTokenPopup(request)
+        if (result.account) {
+            msalInstance.setActiveAccount(result.account);
+            ret = {
+                access_token: result.accessToken,
+                token_type: result.tokenType,
+                refresh_token: null,
+                expires_in: result.expiresOn.getTime() - new Date().getTime()
+            }
+        }
+        return ret;
+    }
+}
+export class MSTeamsAuthService extends ClientSideAuthServiceBase {
+    protected async getIToken(scopes: ScopesEnum): Promise<IToken> {
+        let ret: IToken = null;
+        //const { instance, accounts, inProgress } = useMsal();
+        const request = {
+            scopes: scopes.split(" "),
+        }
+        await app.initialize();
+        const context = await app.getContext();
+        info("app.context:", context);
+        const loginHint = "tachen@microsoft.com";
+        let url = `${location.protocol}//${location.host}/web/auth-start.html?clientId=${ClientSideAuthServiceBase.CLIENT_ID}&tenantId=${ClientSideAuthServiceBase.TENANT_ID}&scope=${scopes}&loginHint=${loginHint}&stamp=${new Date().getTime()}`;
+        info("url", url);
+        const result = await authentication.authenticate({
+            url: url,
+            width: 600,
+            height: 800
+        })
+        const authCode = JSON.parse(result) as IAuthCode;
+        info("result", result);
+        ret = await this.getAccessTokenByCode(authCode, scopes);
+        //const callbackToken = CallbackToken.createInstance(arg.message);
+        info("ret", ret);
+        return ret;
+    }
+
+}
+
+export class OutlookAuthService extends ClientSideAuthServiceBase {
+    protected getIToken(scopes: ScopesEnum): Promise<IToken> {
         return new Promise<IToken>((resolve, reject) => {
             //let url = `${location.protocol}//${location.host}/login.html`;
             const loginHint = "tachen@microsoft.com";
-            let url = `${location.protocol}//${location.host}/web/auth-start.html?clientId=${ClientSideAuthService.CLIENT_ID}&tenantId=${ClientSideAuthService.TENANT_ID}&scope=${ClientSideAuthService.SCOPE}&loginHint=${loginHint}&stamp=${new Date().getTime()}`;
+            let url = `${location.protocol}//${location.host}/web/auth-start.html?clientId=${ClientSideAuthServiceBase.CLIENT_ID}&tenantId=${ClientSideAuthServiceBase.TENANT_ID}&scope=${scopes}&loginHint=${loginHint}&stamp=${new Date().getTime()}`;
             //info(`open dialog ${url}`);
             let dialog;
             const w = 600 / screen.width * 100;
@@ -89,7 +211,7 @@ export class ClientSideAuthService {
                         // info(arg);
                         // setToken(`token: ${arg.message}`);
                         const authCode = JSON.parse(arg.message) as IAuthCode;
-                        const accessToken = this.getAccessTokenByCode(authCode);
+                        const accessToken = this.getAccessTokenByCode(authCode, scopes);
                         //const callbackToken = CallbackToken.createInstance(arg.message);
                         info(accessToken);
                         resolve(accessToken);
@@ -122,44 +244,66 @@ export class ClientSideAuthService {
 
         });
     }
-    public async getAccessTokenByCode(authCode: IAuthCode): Promise<IToken> {
-        let url = `${location.protocol}//${location.host}/api/gettokenbyauthcode`;
-        const tokenRequest: any = {
-            code: authCode.code,
-            state: authCode.state
-        };
-        const tokenResponse = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'cache': "no-store"
-            },
-            body: JSON.stringify(tokenRequest)
-        });
-        if (!tokenResponse.ok) {
-            throw await tokenResponse.text();
-        }
-        return tokenResponse.json();
+    // public async getAccessToken(scopes: ScopesEnum = ScopesEnum.AzureDevOps): Promise<IToken> {
+    //     let tokenCache = AuthServiceTokenCache.createInstanceFromCache();
+    //     let existToken: AuthServiceToken = tokenCache.getToken(scopes);
 
-    }
-    public async refreshAccessToken(refreshToken: string): Promise<IToken> {
-        let url = `${location.protocol}//${location.host}/api/refreshtoken`;
-        const tokenRequest: any = {
-            refreshToken: refreshToken
-        };
-        const tokenResponse = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'cache': "no-store"
-            },
-            body: JSON.stringify(tokenRequest)
-        });
-        if (!tokenResponse.ok) {
-            throw await tokenResponse.text();
-        }
-        return tokenResponse.json();
-    }
+    //     if (existToken && !existToken.IsAccessTokenValid) {
+    //         //refresh token based on refresh_token if token expired
+    //         try {
+    //             info(`Token expired, refresh token...`, existToken);
+    //             const newToken = await this.refreshAccessToken(existToken.refresh_token, scopes);
+    //             if (newToken) {
+    //                 existToken = AuthServiceToken.createInstanceFromIToken(newToken, scopes);
+    //                 // save refreshed token
+    //                 tokenCache.addToken(existToken);
+    //                 tokenCache.saveTokenCache();
+    //                 info(`Saved refreshed token.`);
+    //             } else {
+    //                 existToken = null;
+    //                 info("Cannot refresh token.");
+    //             }
+    //         } catch (err) {
+    //             existToken = null;
+    //             error("Refresh token failed", err);
+    //         }
+    //     } else {
+    //         info(`Reuse existed token.`);
+    //     }
+
+    //     // kickoff authentication if token not exist or expired
+    //     if (existToken == null) {
+    //         info(`Retrieve token based on prompt.`);
+    //         const newToken = await this.getIToken(scopes);
+    //         existToken = AuthServiceToken.createInstanceFromIToken(newToken, scopes);
+    //         tokenCache.addToken(existToken);
+    //         tokenCache.saveTokenCache();
+    //         info(`Saved new token.`);
+    //     }
+    //     info(existToken);
+    //     return existToken;
+    // }
+
+    // private async getAccessTokenByCode(authCode: IAuthCode, scopes: ScopesEnum = ScopesEnum.AzureDevOps): Promise<IToken> {
+    //     let url = `${location.protocol}//${location.host}/api/gettokenbyauthcode`;
+    //     const tokenRequest: any = {
+    //         code: authCode.code,
+    //         state: authCode.state,
+    //         scopes: scopes
+    //     };
+    //     const tokenResponse = await fetch(url, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'Accept': 'application/json',
+    //             'cache': "no-store"
+    //         },
+    //         body: JSON.stringify(tokenRequest)
+    //     });
+    //     if (!tokenResponse.ok) {
+    //         throw await tokenResponse.text();
+    //     }
+    //     return tokenResponse.json();
+
+    // }
 }

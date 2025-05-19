@@ -3,17 +3,15 @@ import { useState, useContext } from "react";
 import {
     getFocusStyle,
     getTheme,
-    IconButton,
-    IIconProps,
-    mergeStyleSets,
-    Separator,
-    Link,
-    CommandButton,
-    IContextualMenuProps,
-    ITooltipProps,
-    ITooltipHostStyles,
-    TooltipHost
-} from "@fluentui/react";
+    mergeStyleSets
+} from "@fluentui/react/lib/Styling";
+import { IconButton, CommandButton } from "@fluentui/react/lib/Button";
+import { IIconProps } from "@fluentui/react/lib/Icon";
+import { Separator } from "@fluentui/react/lib/Separator";
+import { TooltipHost, ITooltipProps, ITooltipHostStyles } from "@fluentui/react/lib/Tooltip";
+import { IContextualMenuProps } from "@fluentui/react/lib/ContextualMenu";
+import { Link } from "@fluentui/react/lib/Link";
+
 import { ServiceContext } from "../services/SettingService";
 import { TaskStateComponent } from "./TaskStateComponent";
 import { Issue } from "../services/Issue";

@@ -16,6 +16,8 @@ const argv = require("yargs").argv;
 
 const debug = argv.debug !== undefined;
 const lint = !(argv["no-linting"] || argv.l === true);
+var BrotliPlugin = require('brotli-webpack-plugin');
+const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 
 const config = [{
     entry: {
@@ -66,14 +68,21 @@ const config = [{
 },
 {
     entry: {
-        vendor: [
-            'react',
-            'react-dom',
-            '@fluentui/react'
-        ],
+        // vendor: [
+        //     'react',
+        //     'react-dom',
+        //     'react-hook-form',
+        //     'react-quill',
+        //     'react-router-dom',
+        //     '@fluentui/react',
+        //     '@azure/msal-browser',
+        //     '@azure/msal-react',
+        //     'moment',
+        //     'lodash'
+        // ],
         taskpane: {
-            import: [path.join(__dirname, "/src/client/taskpane/index.tsx")],
-            dependOn: "vendor"
+            import: [path.join(__dirname, "/src/client/taskpane/index.tsx")]
+            // dependOn: "vendor"
         }
         // commands: {
         //     import: [path.join(__dirname, "/src/client/commands/commands.ts")],
@@ -88,6 +97,17 @@ const config = [{
         //     //path.join(__dirname, "/src/client/client.tsx"),
         //     path.join(__dirname, "/src/client/commands/commands.ts")
         // ]
+    },
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                commons: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'vendors',
+                    chunks: 'all'
+                }
+            }
+        }
     },
     mode: debug ? "development" : "production",
     output: {
@@ -128,11 +148,37 @@ const config = [{
         //         configFile: "./src/client/tsconfig.json"
         //     }
         // }),
+        new BrotliPlugin({
+            asset: '[path].br[query]',
+            test: /\.(js|css|html|svg)$/,
+            threshold: 10240,
+            minRatio: 0.8
+        }),
+        // Ignore all locales except the one you need
+        new webpack.IgnorePlugin({
+            resourceRegExp: /^\.\/locale$/,
+            contextRegExp: /moment$/
+        }),
+        // Include the specific locale you need
+        new webpack.ContextReplacementPlugin(
+            /moment[/\\]locale$/,
+            /en/ // Replace 'en' with your desired locale
+        ),
+        new LodashModuleReplacementPlugin(),
         new HtmlWebpackPlugin(
             {
                 filename: "../taskpane.html", // the dest folder is based on dist/web/scripts
                 template: "./src/public/taskpane.html",
-                chunks: ["taskpane", "vendor"],
+                chunks: ["taskpane"],
+                // chunks: ["taskpane", "vendor"],
+                hash: true
+            }),
+        new HtmlWebpackPlugin(
+            {
+                filename: "../teampane.html", // the dest folder is based on dist/web/scripts
+                template: "./src/public/teampane.html",
+                chunks: ["taskpane"],
+                // chunks: ["taskpane", "vendor"],
                 hash: true
             }),
         new CopyWebpackPlugin({
@@ -143,7 +189,6 @@ const config = [{
                 { from: "./src/settings.*.json", to: "../../[name][ext]" }
             ],
         })
-
     ],
     // devServer: {
     //     hot: false,

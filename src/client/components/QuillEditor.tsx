@@ -1,9 +1,8 @@
-import { IconButton, Label } from "@fluentui/react";
-import { clone, set } from "lodash";
+import { IconButton } from "@fluentui/react/lib/Button";
+import { Label } from "@fluentui/react/lib/Label";
 import * as React from "react";
 import { useState } from "react";
 // import * as Quill from "quill";
-import { Control, useController } from "react-hook-form";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { OutlookItem } from "../services/OutlookItem";

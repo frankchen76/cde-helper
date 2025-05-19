@@ -4,6 +4,7 @@ import { APIKeyDbService } from '../db/APIKeyDbSerivce';
 import { IAuthCode, ITokenProvider, IUserToken, UserToken } from '../AzureDevOpsTokenProvider';
 import { HttpClientService } from '../HttpClientService';
 import { info, err } from '../log';
+import config from '../../config';
 
 export const authenticateApiKey = async (req: Request, res: Response, next: any) => {
     const key = req.headers['x-api-key'];
@@ -30,7 +31,7 @@ export const authenticateBearKey = (req: Request, res: Response, next: Next) => 
         const token = authHeader.split(' ')[1];
         const url = "https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=7.1-preview.3";
         const tokenProvider = new BearTokenProvider(token);
-        const httpCliet = new HttpClientService(tokenProvider);
+        const httpCliet = new HttpClientService(tokenProvider, config.azureDevOpsProviderConfig.adoScopes);
         info('validate token...', token);
         httpCliet.get(url).then((response) => {
             info('authenticateBearKey-response', response);
@@ -66,12 +67,12 @@ class BearTokenProvider implements ITokenProvider {
     getUserToken(): Promise<IUserToken> {
         throw new Error('Method not implemented.');
     }
-    getAccessToken(scopes?: string[] | undefined): Promise<string> {
+    getAccessToken(scopes: string | undefined): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             resolve(this._userToken?.accessToken!);
         });
     }
-    initUserWithAuthCode(authCode: IAuthCode): Promise<void> {
+    initUserWithAuthCode(authCode: IAuthCode, scopes: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
 

@@ -22,3 +22,4 @@ dist/
 env/.env.dev
 deployment/
 stats.json
+data/Settings_Frank.json

@@ -10,13 +10,13 @@ export enum GrantTypeEnum {
 export class ServerSideAuthService {
     constructor(private config: IAzureDevOpsProviderConfig) {
     }
-    public async refreshToken(refreshToken: string): Promise<IToken> {
+    public async refreshToken(refreshToken: string, scopes: string): Promise<IToken> {
         //return await this.retrieveToken(req, GrantTypeEnum.RefreshToken, refreshToken);
-        const token = await AzureDevOpsTokenProvider.refreshAccessToken(this.config, refreshToken);
+        const token = await AzureDevOpsTokenProvider.refreshAccessToken(this.config, refreshToken, scopes);
         return token;
     }
-    public async getTokenByCode(authCode: string): Promise<IToken> {
-        const token = await AzureDevOpsTokenProvider.getAccessTokenByCode(this.config, authCode);
+    public async getTokenByCode(authCode: string, scopes: string): Promise<IToken> {
+        const token = await AzureDevOpsTokenProvider.getAccessTokenByCode(this.config, authCode, scopes);
         return token;
     }
 }
