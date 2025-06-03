@@ -105,12 +105,20 @@ solution leverage ```debug``` NPM package. add ```debug``` in developer tools->A
 ## Deployment
 
 ### Manifest deployment
-the package is using M365 unified App schema. go to MS Teams to sideload the ./appPackage/build/appPackage.dev.zip. 
+~~the package is using M365 unified App schema. go to MS Teams to sideload the ./appPackage/build/appPackage.dev.zip.~~ NOTE: this deployment was working within 24 hours. after that the add-on won't be loaded. 
+* dev deployment: run ```npm run outlook:startdev``` 
+* local deployment: run ```npm run outlook:startlocal```
+
+#### manifest file deployment log: 
+* 05/23/2025-Local: 
+Using account tachen@microsoft.com
+TitleId: U_4e6281f7-ff31-3e24-3055-02f858ed1b79
+AppId: 53b11f2a-e91f-4e6e-a94b-fdf96d212f47
+Successfully registered package! (U_4e6281f7-ff31-3e24-3055-02f858ed1b79)
 
 ### Cosmos DB copy. 
 run 
 ```
-C:\Tools\dmt\windows-package\dmt.exe --settings settings-CompletedTasks.json
 ```
 ### Compile the code
 run the following cmd to compile the code

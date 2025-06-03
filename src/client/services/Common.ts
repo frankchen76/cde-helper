@@ -92,6 +92,15 @@ export class Common {
         }
         return ret;
     }
+    public static getTaskStatusFromOutlookItemCategory(outlookItemCategories: string[]): string {
+        let ret = "";
+        outlookItemCategories.forEach(cat => {
+            if (Common.CATEGORIES.includes(cat)) {
+                ret = cat;
+            }
+        });
+        return ret;
+    }
 }
 export class ExecutingResult {
     constructor(public isRunning: boolean,

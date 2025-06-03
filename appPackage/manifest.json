@@ -1,9 +1,8 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.19",
     "version": "1.0.0",
     "id": "${{TEAMS_APP_ID}}",
-    "packageName": "com.microsoft.teams.extension",
     "developer": {
         "name": "Frank Chen",
         "websiteUrl": "https://www.example.com",
@@ -122,7 +121,7 @@
                 "capabilities": [
                     {
                         "name": "Mailbox",
-                        "minVersion": "1.8"
+                        "minVersion": "1.5"
                     }
                 ],
                 "scopes": [
@@ -135,7 +134,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.8"
+                                "minVersion": "1.5"
                             }
                         ],
                         "formFactors": [
@@ -162,7 +161,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.8"
+                                "minVersion": "1.5"
                             }
                         ]
                     },
@@ -187,7 +186,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.8"
+                                "minVersion": "1.5"
                             }
                         ]
                     },
@@ -214,7 +213,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.8"
+                                "minVersion": "1.5"
                             }
                         ],
                         "scopes": [
@@ -338,7 +337,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.8"
+                                "minVersion": "1.5"
                             }
                         ],
                         "scopes": [
@@ -462,7 +461,7 @@
                         "capabilities": [
                             {
                                 "name": "Mailbox",
-                                "minVersion": "1.8"
+                                "minVersion": "1.5"
                             }
                         ],
                         "scopes": [

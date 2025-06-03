@@ -108,6 +108,7 @@ export class OutlookItem {
             ret = moment.duration(this._end.diff(this._start));
         return ret;
     }
+    public get Categories(): string[] { return this._categories; }
 
     public IsSame(item: OutlookItem): boolean {
         return this.ItemId == item.ItemId;
@@ -134,6 +135,9 @@ export class OutlookItem {
             ret = this._categories.findIndex(c => c.toLowerCase().indexOf(areaName.toLowerCase()) != -1) != -1;
         }
         return ret;
+    }
+    public async refreshCategories(): Promise<void> {
+        this._categories = await OutlookItem._getItemCategories(this._item);
     }
 
     public static async createInstance(item: Office.Item & Office.ItemCompose & Office.ItemRead & Office.Message & Office.MessageCompose & Office.MessageRead & Office.Appointment & Office.AppointmentCompose & Office.AppointmentRead): Promise<OutlookItem> {
@@ -336,10 +340,19 @@ export class OutlookItemJSON {
     }
     private async _applyCategory(category: string, outlookItem: OutlookItem): Promise<void> {
         if (this.ItemId == outlookItem.ItemId) {
+            // refresh the categories
+            await outlookItem.refreshCategories();
             // remove the existing categories
-            await outlookItem.removeItemCategories(Common.CATEGORIES);
-            // add the new category
-            await outlookItem.setItemCategories([category]);
+            const existCategory = Common.getTaskStatusFromOutlookItemCategory(outlookItem.Categories);
+            if (existCategory != "" && existCategory != category) {
+                await outlookItem.removeItemCategories([existCategory]);
+                info(`removed existing categories: ${existCategory}`);
+            }
+            if (existCategory != category) {
+                // add the new category
+                await outlookItem.setItemCategories([category]);
+                info(`added category: ${category}`);
+            }
         } else {
             info(`ItemId is not same. ItemId: ${this.ItemId}, outlookItem.ItemId: ${outlookItem.ItemId}`);
         }

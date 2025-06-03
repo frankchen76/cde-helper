@@ -46,19 +46,23 @@ export const TasksRow = (props: ITasksViewProps) => {
     const serviceContext = useContext(ServiceContext);
     const { control, watch, formState: { errors }, handleSubmit, getValues } = useForm<TaskFormInput>();
 
-    let iconName = "";
+    let iconName = "", iconTitle = "";
     switch (task.outlookMessage.ItemType) {
         case OutlookItemType.Task:
             iconName = "TaskLogo";
+            iconTitle = "Task";
             break;
         case OutlookItemType.Message:
             iconName = "Mail";
+            iconTitle = "Email task";
             break;
         case OutlookItemType.MSTeams:
             iconName = "TeamsLogo";
+            iconTitle = "Teams task";
             break;
         case OutlookItemType.Appointment:
             iconName = "Event";
+            iconTitle = "Appointment task";
             break;
     }
     const theme = getTheme();
@@ -145,6 +149,12 @@ export const TasksRow = (props: ITasksViewProps) => {
         )();
 
     }
+    const syncTaskStatus = async (ev, menuItem) => {
+        const { taskService, setting, selectedOutlookItem } = serviceContext;
+        if (task.outlookMessage.ItemType == OutlookItemType.Message && task.outlookMessage.ItemId == selectedOutlookItem?.ItemId) {
+            await task.outlookMessage.setCategory(task.state, selectedOutlookItem, false);
+        }
+    }
     // const dialogStateHandler = (ev, menuItem) => {
     //     let newTask = cloneDeep(task);
     //     newTask.state = menuItem.key;
@@ -205,6 +215,12 @@ export const TasksRow = (props: ITasksViewProps) => {
                 //         }
                 //     ]
                 // }
+            },
+            {
+                key: "syncstatus",
+                text: "Sync status",
+                iconProps: { iconName: "StatusCircleSync" },
+                onClick: syncTaskStatus
             }
         ]
     };
@@ -227,7 +243,7 @@ export const TasksRow = (props: ITasksViewProps) => {
                         styles={hostStyles}
                         closeDelay={500}
                         calloutProps={{ gapSpace: 0 }}>
-                        <IconButton iconProps={iconProps} title={task.outlookMessage ? "Email task" : "Task"} onClick={props.itemIconClickHandler.bind(this, task)} />
+                        <IconButton iconProps={iconProps} title={iconTitle} onClick={props.itemIconClickHandler.bind(this, task)} />
                     </TooltipHost>
                 </div>
                 <div className="ms-Grid-col ms-sm8 divTaskItem">

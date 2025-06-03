@@ -1,4 +1,4 @@
-import { Checkbox, ComboBox, DatePicker, Dropdown, IComboBoxOption, IDropdownOption, IDropdownStyles, ITag, Position, PrimaryButton, Shimmer, SpinButton, Spinner, TextField, Toggle } from "@fluentui/react";
+import { Checkbox, ComboBox, DatePicker, Dropdown, Stack, IDropdownOption, IDropdownStyles, ITag, Position, PrimaryButton, Shimmer, SpinButton, Spinner, TextField, Toggle, IButton, IButtonStyles } from "@fluentui/react";
 import * as _ from "lodash";
 import * as React from "react";
 import { useEffect, useState } from "react";
@@ -435,6 +435,18 @@ export const CtrlSpinButton = (props: ICtrlSpinButtonProps) => {
         }
         return existNum.toString();
     };
+    const onHourBtnClicked = (val: number) => {
+        const newNum = +(props.defaultValue) + val;
+        setNum(newNum);
+        field.onChange(newNum);
+    }
+    const btnStyles: IButtonStyles = {
+        root: {
+            minWidth: 30,
+            fontSize: 10,
+            height: 20
+        }
+    }
     return (
         <Controller
             name={props.name}
@@ -447,8 +459,9 @@ export const CtrlSpinButton = (props: ICtrlSpinButtonProps) => {
                     <div>
                         <SpinButton
                             // value={props.defaultValue}
+                            value={num.toString()}
                             defaultValue={props.defaultValue}
-                            label={props.label}
+                            label={`${props.label} ${num}h`}
                             labelPosition={Position.top}
                             min={props.min}
                             max={props.max}
@@ -458,6 +471,12 @@ export const CtrlSpinButton = (props: ICtrlSpinButtonProps) => {
                             onDecrement={onCompletedHourDecreased}
                         // decrementButtonAriaLabel={'Decrease value by props.step'} 
                         />
+                        <Stack horizontal tokens={{ childrenGap: 1 }}>
+                            <PrimaryButton text="0.5h" styles={btnStyles} onClick={onHourBtnClicked.bind(this, 0.5)} />
+                            <PrimaryButton text="1h" styles={btnStyles} onClick={onHourBtnClicked.bind(this, 1)} />
+                            <PrimaryButton text="1.5h" styles={btnStyles} onClick={onHourBtnClicked.bind(this, 1.5)} />
+                            <PrimaryButton text="2h" styles={btnStyles} onClick={onHourBtnClicked.bind(this, 2)} />
+                        </Stack>
                         <span className="formError">{props.errors[props.name]?.type === 'required' && props.errors[props.name].message}</span>
                     </div>
                 );

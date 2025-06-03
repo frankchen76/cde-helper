@@ -1,6 +1,6 @@
 {
     "name": "cde-helper",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "description": "Microsoft Teams Toolkit message extension search sample",
     "engines": {
         "node": "16 || 18 || 20"
