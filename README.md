@@ -135,6 +135,7 @@ MS Teams toolkit is using [Run your app in Azure App Service directly from a ZIP
 
 # run below command to make sure you are using right subscription
 az account show
+az account set --subscription c693cbbc-bce9-415c-b873-faee66bb0969
 az webapp deploy --resource-group CDEHelperRG --name cdehelper-web --src-path deployment\deployment_2024090601.zip
 ```
 
@@ -216,6 +217,17 @@ Following documentation will help you to extend the template.
 - [Extend Microsoft 365 Copilot](https://aka.ms/teamsfx-copilot-plugin)
 
 ## change logs: 
+* 1.0.13: 
+  * Implemented recorded flag update feature in history labor search which allow people to track if the item has been logged. 
+  * Implemented wildcard search feature in taskArea view which can search task's and issue's title
+  * reorganized the server side route logic
+* 1.0.12: 
+  * Implemented history labor search. 
+  * Implemented report item recorded feature to track if the report item has been submitted. 
+* 1.0.11:
+  * fixed refresh token failed issues. 
+* 1.0.10:
+  * Fixed the category update logic to update the current email item. 
 * 1.0.9: 
   * rewrite the Settings code. Host Settings in CosmosDb and read it from API. 
   * Add conditional for loading office.js which made tha application can be runn without office.js dependency. 

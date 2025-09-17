@@ -1,6 +1,7 @@
 import { BaseDBService } from "./BaseDBService";
 import config from "../../config";
 import { info } from "console";
+import { ItemDefinition, ItemResponse } from "@azure/cosmos";
 
 export class SettingsDbSerivce extends BaseDBService {
     public async getSettings(upn: string): Promise<any> {
@@ -24,6 +25,13 @@ export class SettingsDbSerivce extends BaseDBService {
             ret = results[0];
         }
         return ret;
+
+    }
+    public async saveSettings(upn: string, setting: any): Promise<ItemResponse<ItemDefinition>> {
+        const container = await super.getDbContainer(config.cosmosDbConfig.CosmosDbContainerId_UserSettings!);
+        setting.upn = upn;
+        const response = await container.items.upsert(setting);
+        return response;
 
     }
 

@@ -5,7 +5,8 @@ export enum TaskFormModeEnum {
     CreateTask,
     CreateEmailTask,
     CreateTeamTask,
-    UpdateTask
+    UpdateTask,
+    UpdateTaskFromCurrentItem
 };
 export enum IssueFormModeEnum {
     CreateIssue,
@@ -40,6 +41,9 @@ export class Common {
                 break;
             case -2:
                 ret = TaskFormModeEnum.CreateTeamTask;
+                break;
+            case -3:
+                ret = TaskFormModeEnum.UpdateTaskFromCurrentItem;
                 break;
             default:
                 ret = TaskFormModeEnum.UpdateTask;

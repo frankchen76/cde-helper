@@ -63,6 +63,11 @@ export const Header = (props: IHeaderProps) => {
             });
         });
 
+        // include update task from current item, the settingId is -1 which indicated default setting and taskId is -3 which indicated reading from current mail item
+        subAllTaskItems.push({
+            key: `updatecurrentitemtask`, text: `Update Current Task`, iconProps: { iconName: 'PageAdd' }, href: `#/redirecttaskitem/-1/-3`
+        });
+
         let subIssueItems: ICommandBarItemProps[] = [{
             key: "viewissues",
             text: "View issues",

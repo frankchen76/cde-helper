@@ -1,5 +1,6 @@
 import moment from "moment";
 import { IComboBoxOption, IDropdownOption, IGroup, SelectableOptionMenuItemType } from "@fluentui/react";
+import { orderBy } from 'lodash';
 import { Area } from "./Area";
 import { ISettingItem } from "./SettingService";
 import * as _ from "lodash";
@@ -250,6 +251,8 @@ export class IssueCollection {
         if (this.items) {
             ret = this.items.map(t => t.toIDropdownOption());
         }
+        //sort by  text
+        ret = orderBy(ret, ["text"], ["asc"]);
         return ret;
     }
     public createGroupsFromIssues(): IGroup[] {

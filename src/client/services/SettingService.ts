@@ -36,7 +36,8 @@ export interface ISettingAreaItem {
 export class Setting {
     public static SETTING_NAME = "AzureDevOpsAddinSetting";
     public static DEFAULT_SETTINGNAME = "CDE2";
-    constructor(public items: ISettingItem[],
+    constructor(public id: string,
+        public items: ISettingItem[],
         public upn: string,
         public defaultSettingId: string,
         public apiKey: string = "",
@@ -52,54 +53,58 @@ export class Setting {
         let ret: Setting = await settingsService.getSetting() as Setting;
         return ret;
     }
-    public static async getSetting1(): Promise<Setting> {
-        let localSetting: Setting = Office.context.roamingSettings.get(Setting.SETTING_NAME) as Setting;
-        // TODO: force to load from web
-        //localSetting = null;
-        let ret: Setting = null;
-        info("getSetting-localSetting", localSetting);
-        if (localSetting) {
-            // read from local if available
-            ret = new Setting(localSetting.items, localSetting.upn, localSetting.defaultSettingId, localSetting.apiKey, localSetting.updateCategory);
-        } else {
-            // load from express.js
-            // get current UPN
-            //const upn = await Setting.getUpn();
-            const upn = await ProfileService.getUpn();
-            let url = `${location.protocol}//${location.host}/api/getSettings/${upn}`;
-            info(`url: ${url}`);
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'cache': "no-store"
-                }
-            });
-            const remoteSetting: ISettingItem[] = await response.json() as ISettingItem[];
-            if (remoteSetting) {
-                ret = new Setting(remoteSetting, upn, Setting.DEFAULT_SETTINGNAME);
-            }
-            info("getSetting-ret", ret);
-            await ret.saveSetting();
-        }
-
-        return ret;
-    }
     public async saveSetting(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            Office.context.roamingSettings.set(Setting.SETTING_NAME, this);
-            Office.context.roamingSettings.saveAsync(result => {
-                if (result.status == Office.AsyncResultStatus.Succeeded) {
-                    info("saveSetting:successed");
-                    resolve();
-                } else {
-                    err("saveSetting:failed", result.error);
-                    reject(result.error);
-                }
-            });
-
-        });
+        const settingsService = new SettingsService();
+        await settingsService.saveSetting(this);
     }
+    // public static async getSetting1(): Promise<Setting> {
+    //     let localSetting: Setting = Office.context.roamingSettings.get(Setting.SETTING_NAME) as Setting;
+    //     // TODO: force to load from web
+    //     //localSetting = null;
+    //     let ret: Setting = null;
+    //     info("getSetting-localSetting", localSetting);
+    //     if (localSetting) {
+    //         // read from local if available
+    //         ret = new Setting(localSetting.items, localSetting.upn, localSetting.defaultSettingId, localSetting.apiKey, localSetting.updateCategory);
+    //     } else {
+    //         // load from express.js
+    //         // get current UPN
+    //         //const upn = await Setting.getUpn();
+    //         const upn = await ProfileService.getUpn();
+    //         let url = `${location.protocol}//${location.host}/api/getSettings/${upn}`;
+    //         info(`url: ${url}`);
+    //         const response = await fetch(url, {
+    //             method: 'GET',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'cache': "no-store"
+    //             }
+    //         });
+    //         const remoteSetting: ISettingItem[] = await response.json() as ISettingItem[];
+    //         if (remoteSetting) {
+    //             ret = new Setting(remoteSetting, upn, Setting.DEFAULT_SETTINGNAME);
+    //         }
+    //         info("getSetting-ret", ret);
+    //         await ret.saveSetting();
+    //     }
+
+    //     return ret;
+    // }
+    // public async saveSetting1(): Promise<void> {
+    //     return new Promise((resolve, reject) => {
+    //         Office.context.roamingSettings.set(Setting.SETTING_NAME, this);
+    //         Office.context.roamingSettings.saveAsync(result => {
+    //             if (result.status == Office.AsyncResultStatus.Succeeded) {
+    //                 info("saveSetting:successed");
+    //                 resolve();
+    //             } else {
+    //                 err("saveSetting:failed", result.error);
+    //                 reject(result.error);
+    //             }
+    //         });
+
+    //     });
+    // }
     public static async removeSetting(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             Office.context.roamingSettings.remove(Setting.SETTING_NAME);
@@ -130,6 +135,7 @@ export class Setting {
         }
         return ret;
     }
+
 };
 export interface IServiceContext {
     setting: Setting;
@@ -157,7 +163,7 @@ export class SettingsService {
             const url = `${location.protocol}//${location.host}/api/settings`;
             const result = await this._httpClientService.get(url);
 
-            ret = new Setting(result.items, result.upn, result.defaultSettingId, result.apiKey, false);
+            ret = new Setting(result.id, result.items, result.upn, result.defaultSettingId, result.apiKey, false);
 
         } catch (error) {
             err("logReportItemsToDb", error);

@@ -5,12 +5,15 @@ import { Spinner } from "@fluentui/react/lib/Spinner";
 import { Dropdown, IDropdownStyles, IDropdownOption } from "@fluentui/react/lib/Dropdown";
 import { DatePicker } from "@fluentui/react/lib/DatePicker";
 import { List } from "@fluentui/react/lib/List";
+import { TextField } from "@fluentui/react/lib/TextField";
 
 import moment from "moment";
 import { useParams, useHistory } from "react-router-dom";
 import { ServiceContext } from "../services/SettingService";
 import { Task, TaskCollection } from "../services/Task";
 import { TasksRow } from "./TasksRow";
+import { IconButton } from "@fluentui/react/lib/Button";
+import { cloneDeep } from "lodash"
 
 export interface ITasksViewByAreaProps {
     //outlookItem: OutlookItem;
@@ -26,15 +29,19 @@ const TasksViewByArea = (props: ITasksViewByAreaProps) => {
     const [selSettingItemId, setSelSettingItemId] = useState<string>(para["settingItemId"]);
     const [selAreaId, setSelAreaId] = useState<number>(+para["areaId"]);
     const [tasks, setTasks] = useState<TaskCollection>();
+    const [tasksView, setTasksView] = useState<TaskCollection>();
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
     const [isDialog, setIsDialog] = useState<boolean>(hostInfo && hostInfo.indexOf("isDialog") != -1);
+    const [txtSearch, setTxtSearch] = useState<string>("");
     const serviceContext = useContext(ServiceContext);
 
     const settingItemsOptions = serviceContext.setting.toIDropdownOption();
     const [areaOptions, setAreaOptions] = useState<IDropdownOption[]>([]);
 
-    const tempDate = moment().weekday(0).isSame(moment(), "day") ? moment().startOf('day').add(-7, 'days').toDate() : moment().weekday(0).startOf('day').toDate();
+    //const tempDate = moment().weekday(0).isSame(moment(), "day") ? moment().startOf('day').add(-7, 'days').toDate() : moment().weekday(0).startOf('day').toDate();
+    const tempDate = moment().startOf('month').isSame(moment(), "day") ? moment().startOf('day').add(-1, 'months').toDate() : moment().startOf('month').toDate();
+
     const [startDate, setStartDate] = useState<Date>(tempDate); // always use this monday or previous monday as start date
     console.log("tempDate", tempDate);
 
@@ -69,8 +76,22 @@ const TasksViewByArea = (props: ITasksViewByAreaProps) => {
         const selArea = areas.getAreaById(areaId);
         const result = await taskService.getTasksByArea(selSettingItem, { areaPath: selArea.WiqlPath, start: s, end: e });
         //tasks = new TaskCollection(result.items);
-        setTasks(result);
+        //setTasks(result);
+        _updateTaskView(result, txtSearch);
     };
+    const _updateTaskView = (tasks: TaskCollection, searchTxt: string = null): void => {
+        let tView = new TaskCollection(cloneDeep(tasks.items));
+        if (searchTxt && searchTxt.length > 0) {
+            const filtered = tasks.items.map(t => {
+                if ((t.title && t.title.toLowerCase().indexOf(searchTxt.toLowerCase()) != -1) ||
+                    (t.issue && t.issue.title && t.issue.title.toLowerCase().indexOf(searchTxt.toLowerCase()) != -1))
+                    return t;
+            });
+            tView = new TaskCollection(filtered);
+        }
+        setTasks(tasks);
+        setTasksView(tView)
+    }
 
     const _onSettingItemChange = async (e, option): Promise<void> => {
         const { taskService, setting } = serviceContext;
@@ -136,6 +157,14 @@ const TasksViewByArea = (props: ITasksViewByAreaProps) => {
             <TasksRow task={item} itemIconClickHandler={_onIconClickHandler} />
         ) : null;
     };
+    const _onSearchChange = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string): void => {
+        setTxtSearch(newValue);
+        _updateTaskView(tasks, newValue);
+    }
+    const _onSearchResetClick = (): void => {
+        setTxtSearch("");
+        _updateTaskView(tasks, null);
+    }
     const dropdownStyles: Partial<IDropdownStyles> = {
         dropdownOptionText: { overflow: 'visible', whiteSpace: 'normal' },
         dropdownItem: { height: 'auto' },
@@ -189,11 +218,26 @@ const TasksViewByArea = (props: ITasksViewByAreaProps) => {
                 </div>
             </div>
             <div className="ms-Grid-row">
+                <div className="ms-Grid-col ms-sm10 ms-md10 ms-lg10" >
+                    <TextField label="Search"
+                        placeholder="Search by task or issue title"
+                        value={txtSearch}
+                        onChange={_onSearchChange} />
+                </div>
+                <div className="ms-Grid-col ms-sm2 ms-md2 ms-lg2" >
+                    <IconButton iconProps={{ iconName: 'EraseTool' }}
+                        style={{ marginTop: "30px" }}
+                        title="Clear the search"
+                        ariaLabel="Clear the search"
+                        onClick={_onSearchResetClick} />
+                </div>
+            </div>
+            <div className="ms-Grid-row">
                 <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12">
                     <Stack tokens={containerStackTokens}>
                         {loading ? <Spinner title="loading" />
                             :
-                            <List items={tasks && tasks.items ? tasks.items : []}
+                            <List items={tasksView && tasksView.items ? tasksView.items : []}
                                 onRenderCell={_onRenderCell} />
                         }
                         {error && <div>{error}</div>}

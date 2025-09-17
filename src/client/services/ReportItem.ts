@@ -13,6 +13,7 @@ export class ReportItem {
     public Issue: Issue;
     public CompletedWork: number;
     public TodayHours: number;
+    public Recorded: boolean = true;
 
     constructor(id: number,
         title: string,
@@ -75,8 +76,8 @@ export class ReportItemCollection {
     private _items: ReportItem[];
     public get Items() { return this._items; }
 
-    constructor() {
-        this._items = [];
+    constructor(items: ReportItem[] = []) {
+        this._items = items;
     }
     public sortByArea(): void {
         this._items = orderBy(this._items, "Area.Name", "desc")
@@ -90,10 +91,45 @@ export class ReportItemCollection {
         for (let name in areaIssues) {
             groups.push(new ReportItemGroup(name, areaIssues[name]));
         }
+        // sort group name
+        groups = orderBy(groups, g => g.GroupName.split("-")[0], "asc");
         return new ReportItemGroupCollection(groups);
     }
     public addReportItems(newItems: ReportItem[]) {
         this._items = this._items.concat(newItems);
+    }
+    public static createInstanceFromJSON(response: any): ReportItemCollection {
+        let ret = new ReportItemCollection();
+        response["tasks"].forEach(row => {
+            let item = new ReportItem(row["Id"],
+                row["Title"],
+                row["State"],
+                row["CreatedDate"],
+                row["StateChangeDate"],
+                row["Area"]["_id"],
+                row["Area"]["_name"],
+                row["Area"]["_path"],
+                row["CompletedWork"]);
+            item.TodayHours = row["TodayHours"];
+            item.Issue = row["Issue"] as Issue;
+            // set recorted flag for previous logged items.
+            item.Recorded = row["Recorded"] === undefined ? true : row["Recorded"];
+            ret.Items.push(item);
+        });
+        return ret;
+    }
+}
+
+export class DbReportItem {
+    public id: string;
+    public reportDate: string;
+    public UPN: string;
+    public tasks: ReportItem[]
+    constructor(id: string, reportDate: string, upn: string, tasks: ReportItem[]) {
+        this.id = id;
+        this.reportDate = reportDate;
+        this.UPN = upn;
+        this.tasks = tasks;
     }
 }
 

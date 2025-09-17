@@ -211,11 +211,18 @@ export class OutlookAuthService extends ClientSideAuthServiceBase {
                         // info(arg);
                         // setToken(`token: ${arg.message}`);
                         const authCode = JSON.parse(arg.message) as IAuthCode;
+                        this.getAccessTokenByCode(authCode, scopes).then((accessToken: IToken) => {
+                            info(accessToken);
+                            resolve(accessToken);
+                        }).catch((err) => {
+                            error("Failed to get access token by auth code", err);
+                            reject(err);
+
+                        }).finally(() => {
+                            dialog.close();
+                        });
                         const accessToken = this.getAccessTokenByCode(authCode, scopes);
                         //const callbackToken = CallbackToken.createInstance(arg.message);
-                        info(accessToken);
-                        resolve(accessToken);
-                        dialog.close();
                     });
 
                     /*Events are sent by the platform in response to user actions or errors. For example, the dialog is closed via the 'x' button*/

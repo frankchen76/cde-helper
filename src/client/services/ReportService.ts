@@ -3,14 +3,16 @@ import { HistoryItemCollection, ReportItem, ReportItemCollection } from "./Repor
 import { IssueService } from "./IssueService";
 import { WorkItemService } from "./WorkItemService";
 import { find } from "lodash";
-import { ApiKeyAuthHeader, HttpClientService } from "./HttpClientService";
+import { BearerAuthHeader, HttpClientService } from "./HttpClientService";
+import { ScopesEnum } from "./ClientSideAuthService";
 import moment from "moment";
 import { error } from "./log";
 
 export interface IReportService {
     //getReportItems(settingItem: ISettingItem): Promise<ReportItemCollection>;
     getReportItems(setting: Setting): Promise<ReportItemCollection>;
-    logReportItemsToDb(apiKey: string, reportItems: ReportItemCollection): Promise<string>;
+    logReportItemsToDb(reportItems: ReportItemCollection, reportDate: string): Promise<string>;
+    loadReportItemsFromDb(reportDate: string): Promise<ReportItemCollection>;
 }
 export class ReportService extends WorkItemService implements IReportService {
     private _reportTaskIncludeFields = "$expand=All";
@@ -70,15 +72,15 @@ export class ReportService extends WorkItemService implements IReportService {
 
         return ret;
     }
-    public async logReportItemsToDb(apiKey: string, reportItems: ReportItemCollection): Promise<string> {
+    public async logReportItemsToDb(reportItems: ReportItemCollection, reportDate: string = null): Promise<string> {
         let ret = "";
         try {
             const url = `${location.protocol}//${location.host}/api/TaskReport`;
             const body = {
-                "reportDate": moment().format("YYYY-MM-DD"),
+                "reportDate": reportDate == null ? moment().format("YYYY-MM-DD") : reportDate,
                 "tasks": reportItems.Items
             };
-            const result = await this._httpClientService.post(url, body);
+            const result = await this._apiClient.post(url, body);
 
         } catch (err) {
             error("logReportItemsToDb", err);
@@ -92,6 +94,19 @@ export class ReportService extends WorkItemService implements IReportService {
         const historyResponse = await this._httpClientService.get(url);
         const histories = HistoryItemCollection.createInstanceFromJSON(historyResponse);
         reportItem.TodayHours = histories.getSelectedDateHour();
+    }
+    public async loadReportItemsFromDb(reportDate: string): Promise<ReportItemCollection> {
+        let ret: ReportItemCollection = null;
+        try {
+            const url = `${location.protocol}//${location.host}/api/TaskReport?reportDate=${reportDate}`;
+            const result = await this._apiClient.get(url);
+            ret = ReportItemCollection.createInstanceFromJSON(result);
+
+        } catch (err) {
+            error("logReportItemsToDb", err);
+            throw err;
+        }
+        return ret;
     }
 
 }

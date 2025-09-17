@@ -156,7 +156,7 @@ const App = (props: AppProps) => {
                             <Header />
                         </div>
                     </div>
-                    <div className="ms-Grid-row" style={{ "marginTop": "44px" }}>
+                    <div className="ms-Grid-row" style={{ "marginTop": "44px", "marginBottom": "20px" }}>
                         <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12" style={{ minHeight: 680 }}>
                             <Switch>
                                 {/* <Route path="/taskitem/:settingItemId/:id" render={(routeProps) => <TaskItemView outlookItem={outlookItem} settingItemId={routeProps["match"]["params"]["settingItemId"]} id={+routeProps["match"]["params"]["id"]} />} /> */}

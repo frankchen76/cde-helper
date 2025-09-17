@@ -5,66 +5,112 @@ import { RouteComponentProps } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { Common, ExecutingResult } from "../services/Common";
 import { ServiceContext } from "../services/SettingService";
-import { ReportItemCollection, ReportItemGroup, ReportItemGroupCollection } from "../services/ReportItem";
+import { ReportItem, ReportItemCollection, ReportItemGroup, ReportItemGroupCollection } from "../services/ReportItem";
 
-import { IconButton } from "@fluentui/react/lib/Button";
+import { IconButton, PrimaryButton } from "@fluentui/react/lib/Button";
 import { MessageBar, MessageBarType } from "@fluentui/react/lib/MessageBar";
 import { Shimmer, ShimmerElementType } from "@fluentui/react/lib/Shimmer";
 import { Stack } from "@fluentui/react/lib/Stack";
 import { Toggle } from "@fluentui/react/lib/Toggle";
+import { DatePicker } from "@fluentui/react/lib/DatePicker";
+import { Checkbox } from "@fluentui/react/lib/Checkbox";
+import moment from "moment";
+import { cloneDeep, find, findIndex } from "lodash";
 
+export interface ITaskReportItemProps {
+    reportItem: ReportItem;
+    showTaskHours: boolean;
+    onReportItemChanged: (item: ReportItem) => void;
+}
+const TaskReportItem = (props: ITaskReportItemProps) => {
+    const [reportItem, setReportItem] = useState<ReportItem>(props.reportItem);
+    const onRecordedChanged = (ev, checked: boolean) => {
+        //console.log(areaSetting);
+        const newReportItem = cloneDeep(props.reportItem);
+        newReportItem.Recorded = checked;
+        setReportItem(newReportItem);
+        props.onReportItemChanged(newReportItem);
+    };
+
+    return (<li key={`li1-${reportItem.Id.toString()}`} id={reportItem.Id.toString()}>
+        <Checkbox key={`chkEnabled_${reportItem.Id.toString()}`}
+            label={`${reportItem.Title} ${props.showTaskHours ? "(" + reportItem.TodayHours + ")" : ""}`}
+            checked={reportItem.Recorded}
+            onChange={onRecordedChanged} />
+
+    </li>);
+};
 
 export interface ITasksReportProps {
     routeProps: RouteComponentProps;
 }
 const TasksReport = (props: ITasksReportProps) => {
     const [executingResult, setExecutingResult] = useState<ExecutingResult>(ExecutingResult.createInstance());
-    const [reportItes, setReportItems] = useState<ReportItemCollection>();
+    const [reportItems, setReportItems] = useState<ReportItemCollection>();
     const [reportGroups, setReportGroups] = useState<ReportItemGroupCollection>();
     const [showTaskHours, setShowTaskHours] = useState<boolean>(true);
+    const [reportDate, setReportDate] = useState<Date>(new Date());
     const serviceContext = useContext(ServiceContext);
 
     useEffect(() => {
-        const loadReports = async () => {
-            try {
-                const { reportService, setting } = serviceContext;
-                setExecutingResult(ExecutingResult.start());
-                const allReportItems = await reportService.getReportItems(setting);
-
-                // Log report items to DB
-                let dbResult = "";
-                if (allReportItems && allReportItems.Items && allReportItems.Items.length > 0) {
-                    dbResult = await reportService.logReportItemsToDb(setting.apiKey, allReportItems);
-                }
-
-                if (allReportItems) {
-                    const groups = allReportItems.groupByIssueArea();
-                    setReportGroups(groups);
-                }
-
-                setReportItems(allReportItems);
-                if (dbResult === "") {
-                    setExecutingResult(ExecutingResult.complete(false));
-                } else {
-                    setExecutingResult(ExecutingResult.complete(true, dbResult, true));
-                }
-
-            } catch (error) {
-                setExecutingResult(ExecutingResult.complete(true, error, true));
-            }
-        };
-
         loadReports();
     }, []);
 
+    const loadReports = async (reportDate?: string) => {
+        try {
+            const { reportService, setting } = serviceContext;
+            let allReportItems: ReportItemCollection = null;
+            let dbResult = "";
+            setExecutingResult(ExecutingResult.start());
+
+            if (reportDate == undefined) {
+                allReportItems = await reportService.getReportItems(setting);
+
+                // Log report items to DB
+                if (allReportItems && allReportItems.Items && allReportItems.Items.length > 0) {
+                    dbResult = await reportService.logReportItemsToDb(allReportItems, null);
+                }
+            } else {
+                allReportItems = await reportService.loadReportItemsFromDb(reportDate);
+            }
+
+            if (allReportItems) {
+                const groups = allReportItems.groupByIssueArea();
+                setReportGroups(groups);
+            }
+
+            setReportItems(allReportItems);
+            if (dbResult === "") {
+                setExecutingResult(ExecutingResult.complete(false));
+            } else {
+                setExecutingResult(ExecutingResult.complete(true, dbResult, true));
+            }
+
+        } catch (error) {
+            setExecutingResult(ExecutingResult.complete(true, error, true));
+        }
+    };
+
+    const onReportItemChangedHandler = (item: ReportItem): void => {
+        // const newReportItems = cloneDeep(reportItems);
+        // const foundIndex = findIndex(newReportItems.Items, i => i.Id === item.Id);
+        // if (foundIndex > -1) {
+        //     newReportItems.Items[foundIndex].Recorded = item.Recorded;
+        // }
+        let newReportItems = new ReportItemCollection(reportItems.Items.map(i => {
+            if (i.Id === item.Id) {
+                i.Recorded = item.Recorded;
+            }
+            return i;
+        }));
+        setReportItems(newReportItems);
+    };
 
     const renderTask = (group: ReportItemGroup): any => {
         return (
-            <ul id={`ul-${group.GroupName}`} style={{ paddingLeft: "20px" }}>
+            <ul key={`ul-${group.GroupName}`} id={`ul-${group.GroupName}`} style={{ paddingLeft: "20px" }}>
                 {group.ReportItems.map(reportItem => {
-                    return (<li id={reportItem.Id.toString()}>
-                        {`${reportItem.Title} ${showTaskHours ? "(" + reportItem.TodayHours + ")" : ""}`}
-                    </li>);
+                    return <TaskReportItem key={`tri-${reportItem.Id}`} reportItem={reportItem} showTaskHours={showTaskHours} onReportItemChanged={onReportItemChangedHandler} />;
                 })}
             </ul>
         )
@@ -80,12 +126,13 @@ const TasksReport = (props: ITasksReportProps) => {
         const success = document.execCommand('copy')
         elem.remove()
     };
+
     const renderGroup = (groups: ReportItemGroupCollection): any => {
         return (
             <ul id="main" style={{ paddingLeft: "20px" }}>
                 {groups.Groups.map(group => {
                     const header = group.GroupName;
-                    return (<li id={`li-${group["areaName"]}`}>
+                    return (<li key={`li2-${header}`} id={`li-${header}`}>
                         <span>{`${header} (${group.TotalHours()}h)`}</span>
                         <IconButton iconProps={{ iconName: "Copy" }}
                             title="Copy to clipboard"
@@ -112,12 +159,58 @@ const TasksReport = (props: ITasksReportProps) => {
     const onShowTaskHoursChange = (ev: React.MouseEvent<HTMLElement>, checked?: boolean) => {
         setShowTaskHours(checked);
     };
+    const onSelectDate = async (date: Date | null | undefined): Promise<void> => {
+        setReportDate(date);
+        const selDate = date ? moment(date) : moment();
+        if (selDate.isSame(new Date(), "day")) {
+            await loadReports();
+        } else {
+            //await loadReports(date ? date.toISOString().substring(0, 10) : undefined);
+            await loadReports(selDate.format("YYYY-MM-DD"));
+        }
+    }
+    const onUpdateClick = async (): Promise<void> => {
+        try {
+            const { reportService, setting } = serviceContext;
+            let dbResult = "";
+            setExecutingResult(ExecutingResult.start());
+
+            // Update report items to DB
+            if (reportItems && reportItems.Items && reportItems.Items.length > 0) {
+                dbResult = await reportService.logReportItemsToDb(reportItems, moment(reportDate).format("YYYY-MM-DD"));
+            }
+
+            if (dbResult === "") {
+                setExecutingResult(ExecutingResult.complete(false));
+            } else {
+                setExecutingResult(ExecutingResult.complete(true, dbResult, true));
+            }
+
+        } catch (error) {
+            setExecutingResult(ExecutingResult.complete(true, error, true));
+        }
+
+    }
 
     return (
         <div className="ms-Grid">
             <div className="ms-Grid-row">
                 <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12 header" >
                     <h2>Tasks Report</h2>
+                </div>
+            </div>
+            <div className="ms-Grid-row">
+                <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12">
+                    <DatePicker
+                        isRequired={true}
+                        today={new Date()}
+                        label="Report Date:"
+                        placeholder="Select a date..."
+                        ariaLabel="Select a date"
+                        maxDate={new Date()}
+                        value={reportDate}
+                        onSelectDate={onSelectDate}
+                    />
                 </div>
             </div>
             {executingResult.displayMessage &&
@@ -163,6 +256,9 @@ const TasksReport = (props: ITasksReportProps) => {
                         offText="Hide"
                         checked={showTaskHours}
                         onChange={onShowTaskHoursChange} />
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12">
+                    <PrimaryButton text="Update" onClick={onUpdateClick} />
                 </div>
             </div>
 
