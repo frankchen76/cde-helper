@@ -135,8 +135,12 @@ MS Teams toolkit is using [Run your app in Azure App Service directly from a ZIP
 
 # run below command to make sure you are using right subscription
 az account show
+# set to EZCode subscription
 az account set --subscription c693cbbc-bce9-415c-b873-faee66bb0969
 az webapp deploy --resource-group CDEHelperRG --name cdehelper-web --src-path deployment\deployment_2024090601.zip
+
+#set to M365CPI78904853.onmicrosoft.com subscription
+az account set --subscription 4394cc4b-cd37-4e3b-abdc-b70b7400f462
 ```
 
 ## Get started with the template
